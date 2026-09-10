@@ -8,7 +8,7 @@ import type { GameEngine } from '../../game/gameEngine'
 import { useGameEngine } from '../../game/useGameEngine'
 import { HandOrder, type ZoneKey } from '../../render/layout'
 import { Board } from './Board'
-import { Topbar, LpBar, PhasesStrip, ToastLayer, PhaseCardBanner, Controles, DetailPanel, Historial } from './Hud'
+import { Topbar, LpBar, PhasesStrip, ToastLayer, PhaseCardBanner, Controls, DetailPanel, CardHistory } from './Hud'
 import { PromptPanel } from './PromptPanel'
 import { ZoneViewModal, ConfirmModal, CoinTossOverlay, EndScreen, ChoiceMenuPopup } from './Modals'
 
@@ -42,9 +42,9 @@ export function DuelScreen({ engine, useImages = true, onExit, onNewDuel }: Duel
   }, [engine, snapshot.selectCards, snapshot.battle, snapshot.idle])
 
   const onCardHover = useCallback((card: DuelCard) => {
-    const revelada = snapshot.revealed.has(card.uid)
-    const hiddenFD = !revelada && isFD(card.position) && card.controller !== snapshot.me
-    const inDeck = !revelada && (card.location === LOC.DECK
+    const revealed = snapshot.revealed.has(card.uid)
+    const hiddenFD = !revealed && isFD(card.position) && card.controller !== snapshot.me
+    const inDeck = !revealed && (card.location === LOC.DECK
       || (card.location === LOC.EXTRA && card.controller !== snapshot.me)
       || (card.location === LOC.HAND && card.controller !== snapshot.me))
     if (hiddenFD || inDeck) return
@@ -74,17 +74,17 @@ export function DuelScreen({ engine, useImages = true, onExit, onNewDuel }: Duel
           <LpBar side="opp" snapshot={snapshot} />
           <LpBar side="me" snapshot={snapshot} />
           <PhasesStrip snapshot={snapshot} />
-          <Historial snapshot={snapshot} db={snapshot.db} useImages={useImages} onHover={setHovered} />
+          <CardHistory snapshot={snapshot} db={snapshot.db} useImages={useImages} onHover={setHovered} />
           <ToastLayer snapshot={snapshot} />
           <PhaseCardBanner snapshot={snapshot} />
           <PromptPanel engine={engine} snapshot={snapshot} names={snapshot.names} />
-          <Controles engine={engine} snapshot={snapshot} />
+          <Controls engine={engine} snapshot={snapshot} />
         </Board>
       </div>
       <CoinTossOverlay snapshot={snapshot} />
       <ZoneViewModal engine={engine} snapshot={snapshot} db={snapshot.db} names={snapshot.names} useImages={useImages} />
       <ConfirmModal engine={engine} snapshot={snapshot} />
-      <EndScreen engine={engine} snapshot={snapshot} onNuevo={onNewDuel ?? (() => location.reload())} />
+      <EndScreen engine={engine} snapshot={snapshot} onNew={onNewDuel ?? (() => location.reload())} />
       <ChoiceMenuPopup snapshot={snapshot} />
     </div>
   )

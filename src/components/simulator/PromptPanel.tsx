@@ -18,13 +18,13 @@ export function ChainTimer({ deadline }: { deadline: number | null }) {
     return () => clearInterval(id)
   }, [deadline])
   if (deadline == null) return null
-  const restante = Math.max(0, deadline - Date.now())
+  const remaining = Math.max(0, deadline - Date.now())
   const total = 15000
-  const pct = Math.max(0, Math.min(100, (restante / total) * 100))
-  const urgente = restante < 4000
+  const pct = Math.max(0, Math.min(100, (remaining / total) * 100))
+  const urgent = remaining < 4000
   return (
-    <div id="ptimer" className={urgente ? 'urgente' : ''}>
-      <span className="ptnum">{Math.ceil(restante / 1000)}</span>
+    <div id="ptimer" className={urgent ? 'urgente' : ''}>
+      <span className="ptnum">{Math.ceil(remaining / 1000)}</span>
       <div className="ptbar"><i style={{ width: pct + '%' }} /></div>
     </div>
   )
@@ -34,14 +34,14 @@ function nameOf(names: NamesSubset, code: number): string { return names[code]?.
 
 export function PromptPanel({ engine, snapshot, names }: { engine: GameEngine; snapshot: GameSnapshot; names: NamesSubset }) {
   const { panel, selectCards, announceCard } = snapshot
-  const [busca, setBusca] = useState('')
+  const [query, setQuery] = useState('')
 
   const visible = !!(panel || selectCards || announceCard)
   if (!visible) return <div id="prompt" style={{ display: 'none' }} />
 
   return (
     <div id="prompt" style={{ display: 'block' }}>
-      {panel?.momento && <div className="pfase">{T(panel.momento)}</div>}
+      {panel?.timing && <div className="pfase">{T(panel.timing)}</div>}
       <div className="ptitle">{T(panel?.title ?? (selectCards ? 'Selecciona cartas' : 'Declara una carta'))}</div>
       {panel?.note && <div className="pnote">{T(panel.note)}</div>}
       {snapshot.chainActive && <ChainTimer deadline={snapshot.chainDeadline} />}
@@ -64,10 +64,10 @@ export function PromptPanel({ engine, snapshot, names }: { engine: GameEngine; s
 
       {announceCard && (
         <>
-          <input placeholder={T('Buscar…') ?? 'Buscar…'} value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <input placeholder={T('Buscar…') ?? 'Buscar…'} value={query} onChange={(e) => setQuery(e.target.value)} />
           <div id="buscaRes" className="popts">
             {announceCard.candidates
-              .filter((c) => !busca || nameOf(names, c).toLowerCase().includes(busca.toLowerCase()))
+              .filter((c) => !query || nameOf(names, c).toLowerCase().includes(query.toLowerCase()))
               .slice(0, 60)
               .map((code) => (
                 <button key={code} className="btn" onClick={() => engine.chooseAnnouncedCard(code)}>{nameOf(names, code)}</button>

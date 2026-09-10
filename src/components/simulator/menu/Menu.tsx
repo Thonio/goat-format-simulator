@@ -1,32 +1,32 @@
 import { useState } from 'react'
 import type { CardsSubset } from '../../../types/cards'
 import { Home } from './Home'
-import { Jugar, type StartOptions } from './Jugar'
+import { Play, type StartOptions } from './Play'
 import { Bots } from './Bots'
-import { Opciones } from './Opciones'
+import { Options } from './Options'
 import type { MenuConfig } from './config'
 
 export interface MenuProps {
   cfg: MenuConfig
   setCfg: (cfg: MenuConfig) => void
   cardsRaw: CardsSubset | null
-  onStart: (opciones?: StartOptions) => void
-  onLanguageChange: (idioma: 'en' | 'es') => void
+  onStart: (options?: StartOptions) => void
+  onLanguageChange: (language: 'en' | 'es') => void
 }
 
-type Pantalla = 'home' | 'jugar' | 'bots' | 'opciones'
+type Screen = 'home' | 'play' | 'bots' | 'options'
 
 /** Port of #menu — the "screen switcher" that in the original was each
  *  `.mpant`'s `hidden` attribute, here as React state. */
 export function Menu({ cfg, setCfg, cardsRaw, onStart, onLanguageChange }: MenuProps) {
-  const [pantalla, setPantalla] = useState<Pantalla>('home')
+  const [screen, setScreen] = useState<Screen>('home')
   return (
     <div id="menu">
       <div className="mcaja">
-        {pantalla === 'home' && <Home onGo={setPantalla} />}
-        {pantalla === 'jugar' && <Jugar cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setPantalla('home')} />}
-        {pantalla === 'bots' && <Bots cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setPantalla('home')} />}
-        {pantalla === 'opciones' && <Opciones cfg={cfg} setCfg={setCfg} onLanguageChange={onLanguageChange} onBack={() => setPantalla('home')} />}
+        {screen === 'home' && <Home onGo={setScreen} />}
+        {screen === 'play' && <Play cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setScreen('home')} />}
+        {screen === 'bots' && <Bots cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setScreen('home')} />}
+        {screen === 'options' && <Options cfg={cfg} setCfg={setCfg} onLanguageChange={onLanguageChange} onBack={() => setScreen('home')} />}
       </div>
     </div>
   )

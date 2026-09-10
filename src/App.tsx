@@ -5,9 +5,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { GameEngine } from './game/gameEngine'
 import { DuelScreen } from './components/simulator/DuelScreen'
 import { Menu } from './components/simulator/menu/Menu'
-import { buscaMazo, listaMazos, loadConfig, saveConfig, avatarSrc, avatarNombre, AVATAR_IA, type MenuConfig } from './components/simulator/menu/config'
-import type { StartOptions } from './components/simulator/menu/Jugar'
-import { setIdioma } from './i18n/i18n'
+import { findDeck, listDecks, loadConfig, saveConfig, avatarSrc, avatarName, AVATAR_AI, type MenuConfig } from './components/simulator/menu/config'
+import type { StartOptions } from './components/simulator/menu/Play'
+import { setLanguage } from './i18n/i18n'
 import type { CardsSubset, NamesSubset } from './types/cards'
 import type { OcgNamespace } from './types/ocgcore'
 
@@ -31,7 +31,7 @@ async function loadEngineModules(): Promise<EngineModules> {
 /* On mobile, the URL bar and nav bar eat up a third of the screen;
    fullscreen removes them, and while we're at it we also try to lock
    landscape orientation, the only one the board fits in. */
-async function pantallaCompleta() {
+async function fullscreen() {
   try {
     const el = document.documentElement
     if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' } as FullscreenOptions)
@@ -40,68 +40,68 @@ async function pantallaCompleta() {
   try { await (globalThis.screen as unknown as { orientation?: { lock?: (o: string) => Promise<void> } })?.orientation?.lock?.('landscape') } catch { /* same */ }
 }
 
-type Estado = 'menu' | 'booting' | 'playing'
+type Screen = 'menu' | 'booting' | 'playing'
 
 function App() {
-  const [estado, setEstado] = useState<Estado>('menu')
+  const [screen, setScreen] = useState<Screen>('menu')
   const [cfg, setCfg] = useState<MenuConfig>(() => loadConfig())
   const [engineMods, setEngineMods] = useState<EngineModules | null>(null)
   const [engine, setEngine] = useState<GameEngine | null>(null)
   const modsPromise = useRef<Promise<EngineModules> | null>(null)
 
-  useEffect(() => { setIdioma(cfg.idioma) }, [cfg.idioma])
+  useEffect(() => { setLanguage(cfg.language) }, [cfg.language])
 
   useEffect(() => {
     modsPromise.current = loadEngineModules()
     modsPromise.current.then(setEngineMods).catch((e) => console.error('No se pudieron cargar los módulos del motor', e))
   }, [])
 
-  const lanzarDuelo = useCallback(async (opciones: StartOptions = {}) => {
+  const launchDuel = useCallback(async (options: StartOptions = {}) => {
     const mods = engineMods ?? await (modsPromise.current ?? loadEngineModules())
     const { X, scriptReader, cardsRaw, names } = mods
-    const mio = buscaMazo(cardsRaw, cfg.mazo)
-    if (!mio) { alert('Elige un mazo.'); return }
-    if (mio.main.length < 40) { alert(`"${mio.nombre}" tiene ${mio.main.length} cartas; hacen falta 40.`); return }
-    const incluidos = listaMazos(cardsRaw).filter((m) => !m.propio && !m.aviso)
-    const quiereIA = opciones.mazoIA ?? cfg.mazoIA
-    let rival = quiereIA === '__mismo__' ? mio
-      : quiereIA === '__azar__' ? incluidos[(Math.random() * incluidos.length) | 0]
-      : buscaMazo(cardsRaw, quiereIA) ?? incluidos[0]
-    if (!rival || rival.main.length < 40) rival = incluidos[0]
-    const mazo = { deck: [...mio.main], extra: [...mio.extra] }
-    const mazoR = { deck: [...rival.main], extra: [...rival.extra] }
-    const faltan = [...new Set([...mazo.deck, ...mazo.extra, ...mazoR.deck, ...mazoR.extra])].filter((c) => !cardsRaw[String(c)])
-    if (faltan.length) { alert('Hay cartas fuera del pool de Goat (' + faltan.length + ').'); return }
+    const mine = findDeck(cardsRaw, cfg.deck)
+    if (!mine) { alert('Elige un mazo.'); return }
+    if (mine.main.length < 40) { alert(`"${mine.name}" tiene ${mine.main.length} cartas; hacen falta 40.`); return }
+    const included = listDecks(cardsRaw).filter((m) => !m.custom && !m.warning)
+    const aiDeck = options.opponentDeck ?? cfg.opponentDeck
+    let opponent = aiDeck === '__mismo__' ? mine
+      : aiDeck === '__azar__' ? included[(Math.random() * included.length) | 0]
+      : findDeck(cardsRaw, aiDeck) ?? included[0]
+    if (!opponent || opponent.main.length < 40) opponent = included[0]
+    const myDeck = { deck: [...mine.main], extra: [...mine.extra] }
+    const foeDeck = { deck: [...opponent.main], extra: [...opponent.extra] }
+    const missing = [...new Set([...myDeck.deck, ...myDeck.extra, ...foeDeck.deck, ...foeDeck.extra])].filter((c) => !cardsRaw[String(c)])
+    if (missing.length) { alert('Hay cartas fuera del pool de Goat (' + missing.length + ').'); return }
 
-    if (globalThis.matchMedia?.('(pointer:coarse)')?.matches || (globalThis.innerWidth ?? 1920) < 900) void pantallaCompleta()
+    if (globalThis.matchMedia?.('(pointer:coarse)')?.matches || (globalThis.innerWidth ?? 1920) < 900) void fullscreen()
 
-    const nuevo = new GameEngine()
-    setEngine(nuevo)
-    setEstado('playing')
-    nuevo.boot({
+    const game = new GameEngine()
+    setEngine(game)
+    setScreen('playing')
+    game.boot({
       X, scriptReader, cardsRaw, names,
-      deck: mazo.deck, extra: mazo.extra, deckRival: mazoR.deck, extraRival: mazoR.extra,
+      deck: myDeck.deck, extra: myDeck.extra, deckRival: foeDeck.deck, extraRival: foeDeck.extra,
       config: {
-        nivel: opciones.nivel ?? cfg.nivel, cadenas: cfg.cadenas, tiempo: cfg.tiempo,
-        nombreMazo: mio.nombre, nombreRival: rival.nombre, reto: opciones.reto ?? undefined,
-        avatarMio: { src: avatarSrc(cfg.avatar), nombre: avatarNombre(cfg.avatar) },
-        avatarRival: { src: avatarSrc(AVATAR_IA), nombre: avatarNombre(AVATAR_IA) },
+        level: options.level ?? cfg.level, chainMode: cfg.chainMode, chainTimeout: cfg.chainTimeout,
+        deckName: mine.name, opponentName: opponent.name, challenge: options.challenge ?? undefined,
+        myAvatar: { src: avatarSrc(cfg.avatar), name: avatarName(cfg.avatar) },
+        opponentAvatar: { src: avatarSrc(AVATAR_AI), name: avatarName(AVATAR_AI) },
       },
     }).catch((e) => console.error('Error al arrancar el duelo', e))
   }, [cfg, engineMods])
 
-  const onStart = useCallback((opciones?: StartOptions) => {
-    if (!engineMods) { setEstado('booting'); void lanzarDuelo(opciones) }
-    else void lanzarDuelo(opciones)
-  }, [engineMods, lanzarDuelo])
+  const onStart = useCallback((options?: StartOptions) => {
+    if (!engineMods) { setScreen('booting'); void launchDuel(options) }
+    else void launchDuel(options)
+  }, [engineMods, launchDuel])
 
-  const volverAlMenu = useCallback(() => { setEngine(null); setEstado('menu') }, [])
+  const backToMenu = useCallback(() => { setEngine(null); setScreen('menu') }, [])
   const setCfgAndSave = useCallback((next: MenuConfig) => { setCfg(next); saveConfig(next) }, [])
 
-  if (estado === 'playing' && engine) {
-    return <DuelScreen engine={engine} onExit={volverAlMenu} onNewDuel={volverAlMenu} />
+  if (screen === 'playing' && engine) {
+    return <DuelScreen engine={engine} onExit={backToMenu} onNewDuel={backToMenu} />
   }
-  if (estado === 'booting') {
+  if (screen === 'booting') {
     return (
       <div id="boot"><div><h1>GOAT FORMAT</h1><p>Cargando el núcleo de reglas…</p>
         <div className="bar"><i /></div></div></div>
@@ -111,7 +111,7 @@ function App() {
     <Menu cfg={cfg} setCfg={setCfgAndSave}
       cardsRaw={engineMods?.cardsRaw ?? null}
       onStart={onStart}
-      onLanguageChange={setIdioma} />
+      onLanguageChange={setLanguage} />
   )
 }
 

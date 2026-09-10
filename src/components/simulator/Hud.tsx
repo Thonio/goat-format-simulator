@@ -18,13 +18,13 @@ export function LpBar({ side, snapshot }: { side: 'me' | 'opp'; snapshot: GameSn
     if (val < prev.current) { setHurt(true); const t = setTimeout(() => setHurt(false), 700); prev.current = val; return () => clearTimeout(t) }
     prev.current = val
   }, [val])
-  const avatar = side === 'me' ? snapshot.config?.avatarMio : snapshot.config?.avatarRival
-  const who = side === 'me' ? T('Tú') : (snapshot.config?.nombreRival ?? T('Oponente'))
+  const avatar = side === 'me' ? snapshot.config?.myAvatar : snapshot.config?.opponentAvatar
+  const who = side === 'me' ? T('Tú') : (snapshot.config?.opponentName ?? T('Oponente'))
   return (
     <div id={side === 'me' ? 'lpMe' : 'lpOpp'} className={`lp${hurt ? ' hurt' : ''}`}>
       {avatar?.src && <img className="avat" src={avatar.src} alt="" />}
       <span className="quien">
-        <span className="who">{avatar?.nombre ?? who}</span>
+        <span className="who">{avatar?.name ?? who}</span>
         <span className="val">{val}</span>
       </span>
     </div>
@@ -32,16 +32,16 @@ export function LpBar({ side, snapshot }: { side: 'me' | 'opp'; snapshot: GameSn
 }
 
 const PH_MAP: Record<number, string> = { 1: 'DP', 2: 'SP', 4: 'M1', 8: 'BP', 16: 'BP', 32: 'BP', 64: 'BP', 128: 'BP', 256: 'M2', 512: 'EP' }
-const FASES: Array<[string, string]> = [['DP', 'Draw'], ['SP', 'Standby'], ['M1', 'Main 1'], ['BP', 'Battle'], ['M2', 'Main 2'], ['EP', 'End']]
+const PHASES: Array<[string, string]> = [['DP', 'Draw'], ['SP', 'Standby'], ['M1', 'Main 1'], ['BP', 'Battle'], ['M2', 'Main 2'], ['EP', 'End']]
 
 export function PhasesStrip({ snapshot }: { snapshot: GameSnapshot }) {
   const id = PH_MAP[snapshot.phase] || 'M1'
-  const conSub = snapshot.momento && id === 'BP'
+  const hasSub = snapshot.timing && id === 'BP'
   return (
     <div id="phases">
-      {FASES.map(([k, n]) => (
-        <div key={k} className={`ph${k === id ? ' on' : ''}${conSub && k === id ? ' conSub' : ''}${conSub && k === id && snapshot.momento === 'damage' ? ' enDamage' : ''}`}
-          data-p={k} data-sub={conSub && k === id ? T(snapshot.momento === 'damage' ? 'Damage Step' : 'Declaración de ataque') : undefined}>
+      {PHASES.map(([k, n]) => (
+        <div key={k} className={`ph${k === id ? ' on' : ''}${hasSub && k === id ? ' conSub' : ''}${hasSub && k === id && snapshot.timing === 'damage' ? ' enDamage' : ''}`}
+          data-p={k} data-sub={hasSub && k === id ? T(snapshot.timing === 'damage' ? 'Damage Step' : 'Declaración de ataque') : undefined}>
           {T(n)}
         </div>
       ))}
@@ -65,25 +65,25 @@ export function ToastLayer({ snapshot }: { snapshot: GameSnapshot }) {
 
 export function PhaseCardBanner({ snapshot }: { snapshot: GameSnapshot }) {
   if (!snapshot.phaseAnnounce) return <div id="phasecard" />
-  const { texto, sub, mia } = snapshot.phaseAnnounce
+  const { text, sub, mine } = snapshot.phaseAnnounce
   return (
-    <div id="phasecard" className={`show ${mia ? 'mine' : 'foe'}`}>
-      <div className="pcmain">{T(texto)}</div>
+    <div id="phasecard" className={`show ${mine ? 'mine' : 'foe'}`}>
+      <div className="pcmain">{T(text)}</div>
       {sub && <div className="pcsub">{T(sub)}</div>}
     </div>
   )
 }
 
-export function Controles({ engine, snapshot }: { engine: GameEngine; snapshot: GameSnapshot }) {
+export function Controls({ engine, snapshot }: { engine: GameEngine; snapshot: GameSnapshot }) {
   const show = !!(snapshot.idle || snapshot.battle)
   if (!show) return <div id="controles" style={{ display: 'none' }} />
-  const faseTxt = snapshot.battle
+  const phaseText = snapshot.battle
     ? (snapshot.battle.toMainPhase2 ? 'A Main Phase 2' : 'Terminar Battle Phase')
     : (snapshot.idle?.toBattlePhase ? 'A Battle Phase' : 'Siguiente fase')
   return (
     <div id="controles" style={{ display: 'flex' }}>
       <button id="btnFase" className="cFase" onClick={() => engine.advancePhase()}>
-        <span className="cIco">▶</span><span id="btnFaseTxt">{T(faseTxt)}</span>
+        <span className="cIco">▶</span><span id="btnFaseTxt">{T(phaseText)}</span>
       </button>
       <button id="btnFin" className="cFin" onClick={() => engine.endTurn()}>
         <span className="cIco">■</span>{T('Terminar turno')}
@@ -149,11 +149,11 @@ export function DetailPanel({ code, db, names, useImages }: { code: number | nul
   )
 }
 
-export function Historial({ snapshot, db, useImages, onHover }: { snapshot: GameSnapshot; db: Map<number, CardRow>; useImages: boolean; onHover: (code: number) => void }) {
+export function CardHistory({ snapshot, db, useImages, onHover }: { snapshot: GameSnapshot; db: Map<number, CardRow>; useImages: boolean; onHover: (code: number) => void }) {
   return (
     <div id="historial">
-      {snapshot.historial.map((h) => (
-        <div key={h.id} className={`hcarta ${h.mia ? 'mia' : 'suya'}`} data-tipo={h.tipo}
+      {snapshot.history.map((h) => (
+        <div key={h.id} className={`hcarta ${h.mine ? 'mia' : 'suya'}`} data-kind={h.kind}
           onMouseEnter={() => onHover(h.code)} onClick={() => onHover(h.code)}>
           {useImages
             ? <img src={`${IMG_BASE}${db.get(h.code)?.alias || h.code}.jpg`} loading="lazy" alt="" />

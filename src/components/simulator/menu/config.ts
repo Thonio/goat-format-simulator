@@ -5,8 +5,8 @@
 import { LEVELS, type Level } from '../../../engine/ai/brain'
 import type { ChainMode } from '../../../game/gameEngine'
 import type { CardsSubset } from '../../../types/cards'
-import mazosData from '../../../data/mazos.json'
-import avataresData from '../../../data/avatares.json'
+import decksData from '../../../data/mazos.json'
+import avatarsData from '../../../data/avatares.json'
 
 export interface MenuConfig {
   level: Level
@@ -53,7 +53,7 @@ export function savedDecks(): SavedDeck[] {
  *  custom deck's cover art (its highest-ATK monster); without it loaded
  *  yet, a custom deck comes out with no cover art. */
 export function listDecks(cardsRaw: CardsSubset | null): ListedDeck[] {
-  const l: ListedDeck[] = (mazosData as Array<{ nombre: string; main: number[]; extra: number[]; aviso: string | null; portada: number }>)
+  const l: ListedDeck[] = (decksData as Array<{ nombre: string; main: number[]; extra: number[]; aviso: string | null; portada: number }>)
     .map((m, i) => ({ id: 'i' + i, name: m.nombre, main: m.main, extra: m.extra, warning: m.aviso, cover: m.portada, custom: false }))
   savedDecks().forEach((m, i) => {
     let best: number | string | null = null, mx = -1
@@ -79,7 +79,7 @@ export const coverUrl = (m: ListedDeck): string =>
 
 /* Avatars: 88px WebP as base64, inside the data bundle itself. The
    opponent is always Roland, the one who deals in the anime. */
-export const AVATARS = avataresData as Record<string, { n: string; d: string }>
+export const AVATARS = avatarsData as Record<string, { n: string; d: string }>
 export const AVATAR_AI = 'roland'
 export const avatarSrc = (k: string): string => AVATARS[k] ? 'data:image/webp;base64,' + AVATARS[k].d : ''
 export const avatarName = (k: string): string => AVATARS[k]?.n ?? 'Oponente'

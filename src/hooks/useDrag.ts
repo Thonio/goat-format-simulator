@@ -67,16 +67,16 @@ export function useDrag(opts: UseDragOptions): UseDragResult {
     return bestD <= lim ? best : null
   }, [zoneRefs])
 
-  const indiceEnMano = useCallback((clientX: number, clientY: number): { indice: number; alturaOk: boolean } | null => {
+  const indexInHand = useCallback((clientX: number, clientY: number): { index: number; heightOk: boolean } | null => {
     const refs = handRefs.current
     if (!refs || !refs.size) return null
-    const mias = [...refs.entries()]
+    const cards = [...refs.entries()]
       .map(([uid, el]) => { const r = el.getBoundingClientRect(); return { uid, x: r.left + r.width / 2 } })
       .sort((a, b) => a.x - b.x)
     let i = 0
-    while (i < mias.length && clientX > mias[i].x) i++
+    while (i < cards.length && clientX > cards[i].x) i++
     const H = window.innerHeight || 800
-    return { indice: i, alturaOk: clientY > H * 0.62 }
+    return { index: i, heightOk: clientY > H * 0.62 }
   }, [handRefs])
 
   const onMove = useCallback((e: PointerEvent) => {
@@ -110,11 +110,11 @@ export function useDrag(opts: UseDragOptions): UseDragResult {
     }
     // dropped back onto the hand itself: reorder (view-only, doesn't touch the engine)
     if (s.moved) {
-      const dest = indiceEnMano(e.clientX, e.clientY)
-      if (dest && dest.alturaOk) { handOrder.moveTo(s.card.uid, dest.indice); bumpLayout(); return }
+      const dest = indexInHand(e.clientX, e.clientY)
+      if (dest && dest.heightOk) { handOrder.moveTo(s.card.uid, dest.index); bumpLayout(); return }
     }
     bumpLayout()
-  }, [engine, me, slotUnder, indiceEnMano, handOrder, bumpLayout, onMove])
+  }, [engine, me, slotUnder, indexInHand, handOrder, bumpLayout, onMove])
 
   const onCardPointerDown = useCallback((card: DuelCard, e: React.PointerEvent) => {
     const HAND = 2

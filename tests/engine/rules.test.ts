@@ -10,7 +10,7 @@
    Port of check-reglas.mjs.
    ════════════════════════════════════════════════════════════════ */
 import { describe, expect, it } from 'vitest'
-import { setUp, X, P, T } from '../support/escenario'
+import { setUp, X, P, T } from '../support/scenario'
 
 const M = X.OcgDuelMode, GOAT = M.MODE_GOAT
 const active = (f: bigint) => (GOAT & f) === f && f !== 0n

@@ -40,7 +40,7 @@ export function ConfirmModal({ engine, snapshot }: { engine: GameEngine; snapsho
         <div className="cftxt">{T(c.text)}</div>
         <div className="cfbtns">
           <button className="cfno" onClick={() => engine.resolveConfirm(false)}>{T('Seguir jugando')}</button>
-          <button className="cfsi" onClick={() => engine.resolveConfirm(true)}>{T(c.etiquetaSi ?? 'Sí, rendirme')}</button>
+          <button className="cfsi" onClick={() => engine.resolveConfirm(true)}>{T(c.yesLabel ?? 'Sí, rendirme')}</button>
         </div>
       </div>
     </div>
@@ -50,45 +50,45 @@ export function ConfirmModal({ engine, snapshot }: { engine: GameEngine; snapsho
 export function CoinTossOverlay({ snapshot }: { snapshot: GameSnapshot }) {
   const c = snapshot.coinToss
   if (!c) return <div id="coin" />
-  const cara = c.stage !== 'spinning' && c.empiezasTu
-  const cruz = c.stage !== 'spinning' && !c.empiezasTu
+  const heads = c.stage !== 'spinning' && c.youStart
+  const tails = c.stage !== 'spinning' && !c.youStart
   return (
     <div id="coin" style={{ display: 'flex', opacity: c.stage === 'hiding' ? 0 : 1 }}>
-      <div className={`coinWrap ${c.stage === 'spinning' ? 'girando' : ''} ${cara ? 'cara' : ''} ${cruz ? 'cruz' : ''}`}>
+      <div className={`coinWrap ${c.stage === 'spinning' ? 'girando' : ''} ${heads ? 'cara' : ''} ${tails ? 'cruz' : ''}`}>
         <div className="coinFace" />
       </div>
-      <div className="coinTxt" style={{ color: c.stage === 'spinning' ? undefined : (c.empiezasTu ? 'var(--gold)' : '#ff8f7a') }}>
-        {c.stage === 'spinning' ? T('Sorteo…') : T(c.empiezasTu ? 'Empiezas tú' : 'Empieza el rival')}
+      <div className="coinTxt" style={{ color: c.stage === 'spinning' ? undefined : (c.youStart ? 'var(--gold)' : '#ff8f7a') }}>
+        {c.stage === 'spinning' ? T('Sorteo…') : T(c.youStart ? 'Empiezas tú' : 'Empieza el rival')}
       </div>
     </div>
   )
 }
 
-export function EndScreen({ engine, snapshot, onNuevo }: { engine: GameEngine; snapshot: GameSnapshot; onNuevo: () => void }) {
+export function EndScreen({ engine, snapshot, onNew }: { engine: GameEngine; snapshot: GameSnapshot; onNew: () => void }) {
   const r = snapshot.result
   if (!snapshot.finished || !r) return <div id="fin" />
   return (
-    <div id="fin" className={`visible ${r.ganaste ? 'gana' : 'pierde'}`} style={{ display: 'flex' }}>
+    <div id="fin" className={`visible ${r.won ? 'gana' : 'pierde'}`} style={{ display: 'flex' }}>
       <div className="finLuz" />
       <div className="finCaja">
-        <div className="finTitulo">{T(r.ganaste ? 'VICTORIA' : 'DERROTA')}</div>
-        <div className="finSub">{T(r.motivo)}</div>
+        <div className="finTitulo">{T(r.won ? 'VICTORIA' : 'DERROTA')}</div>
+        <div className="finSub">{T(r.reason)}</div>
         <div className="finDuelistas">
-          <div className={`finD ${r.ganaste ? 'gana' : ''}`}>
-            {r.avatarMio?.src && <img src={r.avatarMio.src} alt="" />}
-            <span className="finN">{r.avatarMio?.nombre ?? T('Tú')}</span>
-            <span className="finLP">{r.lpMio} LP</span>
+          <div className={`finD ${r.won ? 'gana' : ''}`}>
+            {r.myAvatar?.src && <img src={r.myAvatar.src} alt="" />}
+            <span className="finN">{r.myAvatar?.name ?? T('Tú')}</span>
+            <span className="finLP">{r.myLp} LP</span>
           </div>
           <div className="finVs">VS</div>
-          <div className={`finD ${r.ganaste ? '' : 'gana'}`}>
-            {r.avatarRival?.src && <img src={r.avatarRival.src} alt="" />}
-            <span className="finN">{r.avatarRival?.nombre ?? T('Oponente')}</span>
-            <span className="finLP">{r.lpRival} LP</span>
+          <div className={`finD ${r.won ? '' : 'gana'}`}>
+            {r.opponentAvatar?.src && <img src={r.opponentAvatar.src} alt="" />}
+            <span className="finN">{r.opponentAvatar?.name ?? T('Oponente')}</span>
+            <span className="finLP">{r.opponentLp} LP</span>
           </div>
         </div>
-        <div className="finDatos">{T(`${r.turnos} turnos`)}{r.nombreRival ? ` · ${r.nombreRival}` : ''}</div>
+        <div className="finDatos">{T(`${r.turns} turnos`)}{r.opponentName ? ` · ${r.opponentName}` : ''}</div>
         <div className="finBotones">
-          <button className="finBtn primario" onClick={onNuevo}>{T('Nuevo duelo')}</button>
+          <button className="finBtn primario" onClick={onNew}>{T('Nuevo duelo')}</button>
           <button className="finBtn" onClick={() => engine.dismissResult()}>{T('Ver el tablero')}</button>
         </div>
       </div>

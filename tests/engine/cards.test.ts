@@ -10,7 +10,7 @@
    Port of check-cartas.mjs.
    ════════════════════════════════════════════════════════════════ */
 import { describe, expect, it } from 'vitest'
-import { setUp, code, nameOf, X, P, T } from '../support/escenario'
+import { setUp, code, nameOf, X, P, T } from '../support/scenario'
 import type { OcgMessage } from '../../src/types/ocgcore'
 
 const R = X.OcgResponseType, IA = X.SelectIdleCMDAction, BA = X.SelectBattleCMDAction
@@ -136,12 +136,12 @@ describe('cartas, una a una', () => {
 
   it('Sinister Serpent se ofrece en tu Standby Phase, y vuelve a la mano', async () => {
     const e = await setUp({ gy: ['Sinister Serpent'] }, {})
-    let offeredOnTurn: { turno: number; jugador: number; fase: number } | null = null
+    let offeredOnTurn: { turn: number; player: number; phase: number } | null = null
     await e.run((m) => {
       /* NOTE: it doesn't arrive as SELECT_CHAIN but as SELECT_EFFECTYN
          ("do you activate Sinister Serpent's effect?"). */
       if (m.type === T.SELECT_EFFECTYN && m.code === code('Sinister Serpent')) {
-        if (offeredOnTurn === null) offeredOnTurn = { turno: e.turn, jugador: m.player as number, fase: e.phase }
+        if (offeredOnTurn === null) offeredOnTurn = { turn: e.turn, player: m.player as number, phase: e.phase }
         return { type: R.SELECT_EFFECTYN, yes: true }
       }
       if (m.type === T.SELECT_CHAIN) return { type: R.SELECT_CHAIN, index: null }
@@ -150,8 +150,8 @@ describe('cartas, una a una', () => {
       return null
     }, 600)
     expect(offeredOnTurn).not.toBeNull()
-    expect(offeredOnTurn!.jugador).toBe(0)
-    expect(offeredOnTurn!.fase).toBe(2)
+    expect(offeredOnTurn!.player).toBe(0)
+    expect(offeredOnTurn!.phase).toBe(2)
     expect(has(e.hand(0), 'Sinister Serpent')).toBe(true)
   })
 

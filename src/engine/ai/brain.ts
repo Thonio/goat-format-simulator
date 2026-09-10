@@ -16,7 +16,7 @@ import { viewOf, type CardView } from './view'
 import {
   atk, def, power, cardValue, roleOf, infoOf, advantage,
   winsCombat, diesAttacking,
-} from './evaluar'
+} from './evaluate'
 import { canon } from './knowledge'
 import type { GoatDuel } from '../duel'
 import type { CardRow, NamesSubset } from '../../types/cards'
@@ -164,7 +164,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
   }
 
   /* ══════════ MAIN PHASE ══════════ */
-  function mainPhase(m: OcgMessage, intento: number): Record<string, unknown> {
+  function mainPhase(m: OcgMessage, attempt: number): Record<string, unknown> {
     const v = viewOf(duel, me, db, names)
     const rush = urgency(v)
 
@@ -175,8 +175,8 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       ;(m.activates as ListItem[] | undefined || []).forEach((_c, i) => options.push({ a: IA.SELECT_ACTIVATE, i }))
       ;(m.spell_sets as ListItem[] | undefined || []).forEach((_c, i) => options.push({ a: IA.SELECT_SPELL_SET, i }))
       ;(m.monster_sets as ListItem[] | undefined || []).forEach((_c, i) => options.push({ a: IA.SELECT_MONSTER_SET, i }))
-      if (options.length && intento < options.length) {
-        const e = options[(intento + (random(0.5) ? 1 : 0)) % options.length]
+      if (options.length && attempt < options.length) {
+        const e = options[(attempt + (random(0.5) ? 1 : 0)) % options.length]
         return { type: R.SELECT_IDLECMD, action: e.a, index: e.i }
       }
       return { type: R.SELECT_IDLECMD, action: m.to_bp ? IA.TO_BP : IA.TO_EP, index: null }
@@ -406,7 +406,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
     if (handicap.error && plan.length > 1 && random(handicap.error))
       plan.unshift(plan.splice(1 + ((Math.random() * (plan.length - 1)) | 0), 1)[0])
 
-    const chosen = plan[intento]
+    const chosen = plan[attempt]
     if (chosen && chosen.score > 0.8) {
       trace(chosen.why, { puntos: +chosen.score.toFixed(2) })
       if (chosen.action === IA.SELECT_POS_CHANGE && chosen.uid != null)
@@ -418,7 +418,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
   }
 
   /* ══════════ BATTLE PHASE ══════════ */
-  function battlePhase(m: OcgMessage, intento: number): Record<string, unknown> {
+  function battlePhase(m: OcgMessage, attempt: number): Record<string, unknown> {
     const v = viewOf(duel, me, db, names)
     const attacks = (m.attacks as ListItem[] | undefined || []).map((l, i) => {
       const c = duel.resolve(l as { controller: number; location: number; sequence: number }, l.code)
@@ -433,8 +433,8 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
        rookie mistake and the one that gives away the most games, so it's
        the one that separates the levels the most. */
     if (handicap.dumbCombat) {
-      if (intento < attacks.length)
-        return { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: attacks[intento].i }
+      if (attempt < attacks.length)
+        return { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: attacks[attempt].i }
       return { type: R.SELECT_BATTLECMD, action: m.to_m2 ? BA.TO_M2 : BA.TO_EP, index: null }
     }
 
@@ -472,20 +472,20 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       && advantage(v) > 2 && v.lp.opponent > 3000
     const list = cautious ? scored.slice(0, 1) : scored
 
-    if (intento < list.length) {
-      lastAttacker = list[intento].c
-      trace(`ataca con ${list[intento].c.name}`, { valor: +list[intento].p.toFixed(2) })
-      return { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: list[intento].i }
+    if (attempt < list.length) {
+      lastAttacker = list[attempt].c
+      trace(`ataca con ${list[attempt].c.name}`, { valor: +list[attempt].p.toFixed(2) })
+      return { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: list[attempt].i }
     }
     return { type: R.SELECT_BATTLECMD, action: m.to_m2 ? BA.TO_M2 : BA.TO_EP, index: null }
   }
 
   /* ══════════ CHAINS ══════════ */
-  function chain(m: OcgMessage, intento: number): Record<string, unknown> {
+  function chain(m: OcgMessage, attempt: number): Record<string, unknown> {
     const v = viewOf(duel, me, db, names)
     const options = (m.selects as ListItem[] | undefined || []).map((l, i) => ({ i, c: cardFromList(l) }))
     if (!options.length) return { type: R.SELECT_CHAIN, index: null }
-    if (m.forced) return { type: R.SELECT_CHAIN, index: intento % options.length }
+    if (m.forced) return { type: R.SELECT_CHAIN, index: attempt % options.length }
 
     /* Low levels don't respond on the opponent's turn: half of Goat's
        traps go unused and it shows heavily on the scoreboard. */
@@ -515,15 +515,15 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       return { type: R.SELECT_CHAIN, index: null }
     }
     const ordered = options.map((o) => ({ ...o, p: score(o) })).filter((o) => o.p > 2.4).sort((a, b) => b.p - a.p)
-    if (intento < ordered.length) {
-      trace(`encadena ${ordered[intento].c.name}`)
-      return { type: R.SELECT_CHAIN, index: ordered[intento].i }
+    if (attempt < ordered.length) {
+      trace(`encadena ${ordered[attempt].c.name}`)
+      return { type: R.SELECT_CHAIN, index: ordered[attempt].i }
     }
     return { type: R.SELECT_CHAIN, index: null }
   }
 
   /* ══════════ SELECTIONS ══════════ */
-  function chooseCards(m: OcgMessage, intento: number): Record<string, unknown> | null {
+  function chooseCards(m: OcgMessage, attempt: number): Record<string, unknown> | null {
     const list = (m.type === T.SELECT_UNSELECT_CARD ? (m.select_cards as ListItem[] | undefined) : (m.selects as ListItem[] | undefined)) || []
     if (!list.length) return null
 
@@ -597,10 +597,10 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
     const fromHiddenZone = list.every((l) => [1, 16, 32].includes(l.location ?? -1))
     const benefit = !isTribute && !isDiscard && fromHiddenZone
     const count = benefit ? Math.max(min, max) : Math.min(Math.max(min, 1), Math.max(max, 1))
-    const offset = intento % Math.max(1, ordered.length - count + 1)
+    const offset = attempt % Math.max(1, ordered.length - count + 1)
     const idx = ordered.slice(offset, offset + count).map((o) => o.i)
     if (m.type === T.SELECT_UNSELECT_CARD)
-      return { type: R.SELECT_UNSELECT_CARD, index: (m.can_finish && intento >= list.length) ? null : idx[0] }
+      return { type: R.SELECT_UNSELECT_CARD, index: (m.can_finish && attempt >= list.length) ? null : idx[0] }
     return { type: isTribute ? R.SELECT_TRIBUTE : R.SELECT_CARD, indicies: idx }
   }
 
@@ -634,14 +634,14 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
   }
 
   /* ══════════ ENTRY POINT ══════════ */
-  return function decide(m: OcgMessage, intento = 0): Record<string, unknown> | null {
+  return function decide(m: OcgMessage, attempt = 0): Record<string, unknown> | null {
     switch (m.type) {
-      case T.SELECT_IDLECMD: return mainPhase(m, intento)
-      case T.SELECT_BATTLECMD: return battlePhase(m, intento)
-      case T.SELECT_CHAIN: return chain(m, intento)
+      case T.SELECT_IDLECMD: return mainPhase(m, attempt)
+      case T.SELECT_BATTLECMD: return battlePhase(m, attempt)
+      case T.SELECT_CHAIN: return chain(m, attempt)
       case T.SELECT_CARD:
       case T.SELECT_TRIBUTE:
-      case T.SELECT_UNSELECT_CARD: return chooseCards(m, intento)
+      case T.SELECT_UNSELECT_CARD: return chooseCards(m, attempt)
       case T.ANNOUNCE_CARD: {
         /* A player knows their own deck: it declares the card with the
            most copies remaining, which is the correct play with

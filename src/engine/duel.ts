@@ -336,8 +336,8 @@ export class GoatDuel {
            measure whether the AI attacks well or suicides (see analizar.mjs). */
         this.emit('battle', {
           uid: a?.uid, targetUid: t?.uid ?? null,
-          atacante: { atk: mc.attack, def: mc.defense, muere: !!mc.destroyed, controller: mc.controller },
-          objetivo: mt ? { atk: mt.attack, def: mt.defense, muere: !!mt.destroyed, controller: mt.controller } : null,
+          attacker: { atk: mc.attack, def: mc.defense, dies: !!mc.destroyed, controller: mc.controller },
+          target: mt ? { atk: mt.attack, def: mt.defense, dies: !!mt.destroyed, controller: mt.controller } : null,
         })
         break
       }
@@ -405,15 +405,15 @@ export class GoatDuel {
         const loc = m.type === T.SHUFFLE_HAND ? LOC.HAND : LOC.EXTRA
         const zone = this.zones[player as 0 | 1][loc as keyof DuelSide] as Array<DuelCard | null>
         const pool = [...zone]
-        const nuevo: Array<DuelCard | null> = []
+        const reordered: Array<DuelCard | null> = []
         for (const code of (m.cards as number[] | undefined) ?? []) {
           let i = pool.findIndex((c) => c && c.code === code)
           if (i < 0) i = pool.findIndex((c) => c) // shouldn't happen
-          if (i >= 0) nuevo.push(pool.splice(i, 1)[0])
+          if (i >= 0) reordered.push(pool.splice(i, 1)[0])
         }
-        for (const resto of pool) if (resto) nuevo.push(resto)
+        for (const rest of pool) if (rest) reordered.push(rest)
         zone.length = 0
-        zone.push(...nuevo)
+        zone.push(...reordered)
         this.reindex(player, loc)
         this.emit('reorder', { player, location: loc })
         break
@@ -424,7 +424,7 @@ export class GoatDuel {
          while it asked you to pick from a list. Once revealed they stop
          being secret: their code gets fixed. */
       case T.CONFIRM_CARDS: {
-        const vistas: DuelCard[] = []
+        const revealed: DuelCard[] = []
         for (const c of (m.cards as Array<{ location: number; code?: number } & DuelLocationRef> | undefined) ?? []) {
           /* NOTE: we don't even ask for the DECK. Our deck order is
              fictitious — the engine shuffles on its own — so looking up a
@@ -436,11 +436,11 @@ export class GoatDuel {
           const card = this.resolve(c, c.code)
           if (!card) continue
           if (c.code) card.code = c.code
-          vistas.push(card)
+          revealed.push(card)
         }
-        this.emit('revelar', {
-          player: m.player, uids: vistas.map((c) => c.uid),
-          codes: vistas.map((c) => c.code),
+        this.emit('reveal', {
+          player: m.player, uids: revealed.map((c) => c.uid),
+          codes: revealed.map((c) => c.code),
           location: (m.cards as Array<{ location: number }> | undefined)?.[0]?.location ?? 0,
         })
         break

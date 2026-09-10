@@ -122,7 +122,7 @@ export function Board({ engine, snapshot, db, names, useImages, onCardClick, onC
       const root = getComputedStyle(document.documentElement)
       const CW = parseFloat(root.getPropertyValue('--cw')) || 116
       const esc = parseFloat(root.getPropertyValue('--mano-mia')) || 1
-      const k = computeBoardScale({ availW, availH, gridW: gr.offsetWidth, gridH: gr.offsetHeight, cw: CW, escMia: esc })
+      const k = computeBoardScale({ availW, availH, gridW: gr.offsetWidth, gridH: gr.offsetHeight, cw: CW, myHandScale: esc })
       pl.style.transform = `scale(${k.toFixed(3)}) rotateX(var(--tilt))`
     }
     fit()
@@ -136,18 +136,18 @@ export function Board({ engine, snapshot, db, names, useImages, onCardClick, onC
     if (!gr || !snapshot.zones) return
     const root = getComputedStyle(document.documentElement)
     const CW = parseFloat(root.getPropertyValue('--cw')) || 116
-    const ESC_MIA = parseFloat(root.getPropertyValue('--mano-mia')) || 1
-    const ESC_RIVAL = parseFloat(root.getPropertyValue('--mano-rival')) || 1
-    const orden = handOrder.sync(allCards.filter((c) => c.location === LOC.HAND && c.controller === me).map((c) => c.uid))
+    const MY_HAND_SCALE = parseFloat(root.getPropertyValue('--mano-mia')) || 1
+    const OPP_HAND_SCALE = parseFloat(root.getPropertyValue('--mano-rival')) || 1
+    const order = handOrder.sync(allCards.filter((c) => c.location === LOC.HAND && c.controller === me).map((c) => c.uid))
     const zonePos = (owner: number, zone: ZoneKey, slot: number) => {
       const el = zoneRefs.current.get(`${owner}:${zone}:${slot}`)
       return el ? { x: el.offsetLeft, y: el.offsetTop } : { x: 0, y: 0 }
     }
     const layout = computeLayout({
       me, zones: snapshot.zones!, cw: CW, gridW: gr.offsetWidth, gridH: gr.offsetHeight,
-      escMia: ESC_MIA, escRival: ESC_RIVAL, zonePos,
-      previa: snapshot.pendingPlacement ? { uid: snapshot.pendingPlacement.uid, owner: snapshot.pendingPlacement.owner, zone: snapshot.pendingPlacement.zone, slot: snapshot.pendingPlacement.slot } : null,
-      revelados: snapshot.revealed, manoOrdenMia: orden,
+      myHandScale: MY_HAND_SCALE, oppHandScale: OPP_HAND_SCALE, zonePos,
+      preview: snapshot.pendingPlacement ? { uid: snapshot.pendingPlacement.uid, owner: snapshot.pendingPlacement.owner, zone: snapshot.pendingPlacement.zone, slot: snapshot.pendingPlacement.slot } : null,
+      revealed: snapshot.revealed, myHandOrder: order,
     })
     for (const [uid, el] of cardElRefs.current) {
       const v = layout.get(uid)
@@ -225,7 +225,7 @@ function cardBaseClass(uid: number, cards: DuelCard[], db: Map<number, CardRow>)
 function extraClasses(uid: number, s: GameSnapshot, drag: ReturnType<typeof useDrag>): string {
   const cls: string[] = []
   if (s.idle?.playable.has(uid)) cls.push('playable')
-  if (s.idle?.acciones.get(uid)?.activate !== undefined) cls.push('usable')
+  if (s.idle?.actions.get(uid)?.activate !== undefined) cls.push('usable')
   if (s.battle?.attacked.has(uid)) cls.push('gastada')
   if (s.glowing.has(uid)) cls.push('glow')
   if (s.declaringUid === uid) cls.push('declaring')

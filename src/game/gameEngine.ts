@@ -898,7 +898,7 @@ export class GameEngine {
           break
         }
         case 'chainEnd': this.chainActive = false; this.revealed = new Set(); this.commit(); break
-        case 'revelar': {
+        case 'reveal': {
           const uids = (e.uids as number[] | undefined) ?? []
           if (uids.length) {
             this.revealed = new Set(uids)
