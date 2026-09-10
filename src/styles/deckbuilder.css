@@ -1,0 +1,14 @@
+/* Deck builder global stylesheet.
+   Placeholder — the real CSS is recovered verbatim from the committed
+   isola/deckbuilder.html's inline <style> block in the deck-builder-port phase
+   (its plantilla.html/estilo.css sources are missing from the repo). */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #05070d;
+  color: #d8b45c;
+  font-family: system-ui, sans-serif;
+}
