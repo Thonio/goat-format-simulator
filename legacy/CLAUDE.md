@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > **Legacy folder.** This is the original self-contained HTML/vanilla-JS
 > implementation. It has been ported to React + TypeScript + Vite at the
 > repo root (see the root `README.md` and `src/`) — that is the actively
-> developed version now. Everything below describes `isola/` itself, kept
+> developed version now. Everything below describes `legacy/` itself, kept
 > as a reference; it is not built or run as part of the root app.
 
 ## What this is
