@@ -1,4 +1,11 @@
-# Goat Format Simulator
+# Goat Format Simulator (legacy)
+
+> **This is the original, self-contained implementation.** The project has
+> since been ported to React + TypeScript + Vite — see the
+> [repo root README](../README.md). This folder is kept as a reference and
+> historical record; it is not built or run as part of the current app, but
+> the notes below (architecture, bot methodology, testing approach) still
+> describe how the simulator works, since the port follows the same design.
 
 A playable Yu-Gi-Oh! **Goat Format** (April 2005) simulator that runs in a single
 HTML file. No install, no account, no server — download it, double-click it, play.
