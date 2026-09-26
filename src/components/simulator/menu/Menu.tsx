@@ -11,14 +11,13 @@ export interface MenuProps {
   setCfg: (cfg: MenuConfig) => void
   cardsRaw: CardsSubset | null
   onStart: (options?: StartOptions) => void
-  onLanguageChange: (language: 'en' | 'es') => void
 }
 
 type Screen = 'home' | 'play' | 'bots' | 'options'
 
 /** Port of #menu — the "screen switcher" that in the original was each
  *  `.mpant`'s `hidden` attribute, here as React state. */
-export function Menu({ cfg, setCfg, cardsRaw, onStart, onLanguageChange }: MenuProps) {
+export function Menu({ cfg, setCfg, cardsRaw, onStart }: MenuProps) {
   const [screen, setScreen] = useState<Screen>('home')
   return (
     <div id="menu">
@@ -26,7 +25,7 @@ export function Menu({ cfg, setCfg, cardsRaw, onStart, onLanguageChange }: MenuP
         {screen === 'home' && <Home onGo={setScreen} />}
         {screen === 'play' && <Play cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setScreen('home')} />}
         {screen === 'bots' && <Bots cfg={cfg} setCfg={setCfg} cardsRaw={cardsRaw} onStart={onStart} onBack={() => setScreen('home')} />}
-        {screen === 'options' && <Options cfg={cfg} setCfg={setCfg} onLanguageChange={onLanguageChange} onBack={() => setScreen('home')} />}
+        {screen === 'options' && <Options cfg={cfg} setCfg={setCfg} onBack={() => setScreen('home')} />}
       </div>
     </div>
   )

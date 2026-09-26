@@ -1,4 +1,3 @@
-import { T } from '../../../i18n/i18n'
 import type { CardsSubset } from '../../../types/cards'
 import { AVATARS, LEVEL_LABEL, LEVELS, avatarSrc, listDecks, coverUrl, saveConfig, type Level, type MenuConfig } from './config'
 
@@ -23,25 +22,25 @@ export function Play({ cfg, setCfg, cardsRaw, onStart, onBack }: PlayProps) {
 
   return (
     <div className="mpant" id="pJugar">
-      <h2>{T('Duelo VS')}</h2>
-      <label className="mlab">{T('Dificultad del rival')}</label>
+      <h2>VS Duel</h2>
+      <label className="mlab">Opponent difficulty</label>
       <div className="mrej" id="mNiveles">
         {LEVELS.map((lv) => (
-          <button key={lv} className={lv === cfg.level ? 'sel' : ''} onClick={() => set('level', lv)}>{T(LEVEL_LABEL[lv])}</button>
+          <button key={lv} className={lv === cfg.level ? 'selected' : ''} onClick={() => set('level', lv)}>{LEVEL_LABEL[lv]}</button>
         ))}
       </div>
-      <label className="mlab">{T('Tu avatar')}</label>
+      <label className="mlab">Your avatar</label>
       <div id="mAvatares">
         {Object.keys(AVATARS).map((k) => (
-          <div key={k} className={'av' + (k === cfg.avatar ? ' sel' : '')} title={AVATARS[k].n} onClick={() => set('avatar', k)}>
-            <img src={avatarSrc(k)} alt={AVATARS[k].n} />
+          <div key={k} className={'av' + (k === cfg.avatar ? ' selected' : '')} title={AVATARS[k].name} onClick={() => set('avatar', k)}>
+            <img src={avatarSrc(k)} alt={AVATARS[k].name} />
           </div>
         ))}
       </div>
-      <label className="mlab">{T('Tu mazo')}</label>
+      <label className="mlab">Your deck</label>
       <div className="galeria" id="mGaleria">
         {all.map((m) => (
-          <div key={m.id} className={'mz' + (m.id === cfg.deck ? ' sel' : '') + (m.warning ? ' mal' : '')} onClick={() => set('deck', m.id)}>
+          <div key={m.id} className={'mz' + (m.id === cfg.deck ? ' selected' : '') + (m.warning ? ' invalid' : '')} onClick={() => set('deck', m.id)}>
             {m.cover ? <img loading="lazy" src={coverUrl(m)} alt="" /> : null}
             <span className="mzn">{m.name}</span>
             <span className="mzc">{m.main.length}{m.extra.length ? '+' + m.extra.length : ''}{m.warning ? ' ⚠' : ''}</span>
@@ -49,16 +48,16 @@ export function Play({ cfg, setCfg, cardsRaw, onStart, onBack }: PlayProps) {
         ))}
       </div>
       <div className="mnota" id="mMazoInfo">
-        {!mine ? '' : mine.warning ? T(`⚠ ${mine.warning}: el Main Deck necesita 40 como mínimo`) : T(`${mine.main.length} cartas · validado contra la lista oficial`)}
+        {!mine ? '' : mine.warning ? `⚠ ${mine.warning}: the Main Deck needs at least 40 cards` : `${mine.main.length} cards · checked against the official list`}
       </div>
-      <label className="mlab">{T('Mazo del rival')}</label>
+      <label className="mlab">Opponent deck</label>
       <select id="mMazoIA" value={cfg.opponentDeck} onChange={(e) => set('opponentDeck', e.target.value)}>
-        <option value="__azar__">{T('Al azar entre los incluidos')}</option>
-        <option value="__mismo__">{T('El mismo que el tuyo')}</option>
+        <option value="__random__">Random from the included decks</option>
+        <option value="__same__">Same as yours</option>
         {all.map((m) => <option key={m.id} value={m.id}>{m.name} — {m.main.length}{m.extra.length ? '+' + m.extra.length : ''}{m.warning ? ' ⚠' : ''}</option>)}
       </select>
-      <button className="mbig" id="mJugar" onClick={() => onStart()}>{T('Empezar duelo')}</button>
-      <button className="mvolver" id="volver1" onClick={onBack}>← {T('Volver')}</button>
+      <button className="mbig" id="mJugar" onClick={() => onStart()}>Start duel</button>
+      <button className="mvolver" id="volver1" onClick={onBack}>&larr; Back</button>
     </div>
   )
 }

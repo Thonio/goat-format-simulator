@@ -51,15 +51,20 @@ which is kept for reference under [`legacy/`](legacy/) (see below).
 | `simulator/menu/` | `Home`, `Play`, `Bots`, `Options` screens + saved config |
 | `deckbuilder/DeckBuilderApp.tsx` | the deck builder UI |
 
-**`src/` — rendering, i18n, data, misc**
+**`src/` — rendering, data, misc**
 
 | Path | What it is |
 |---|---|
 | `render/layout.ts` | board/card transform + position math (kept out of `gameEngine.ts` on purpose — see file header) |
-| `i18n/i18n.ts` | English / Spanish strings |
 | `hooks/useDrag.ts` | drag-and-drop for playing cards from hand |
 | `styles/` | `global.css`, `deckbuilder.css` |
 | `data/` | card database, legal pool (`goat-pool.json`), copy limits (`goat-limites.json`), decks (`mazos.json`), avatars, `pool_cards.json` / `pool_texts.json` |
+
+The UI is English-only: strings live inline in the components and the engine, with no
+translation layer. Difficulty ids (`rookie`/`normal`/`tough`/`expert`), chain-mode ids
+(`auto`/`always`/`never`) and the opponent-deck sentinels (`__random__`/`__same__`) are
+persisted in `localStorage`, so `menu/config.ts` maps the pre-rename Spanish ids forward
+on load rather than dropping a returning player's settings and bot-mode progress.
 | `vendor/` | `ocgcore.bundle.js` (wasm engine) + `scripts.bundle.js` (bundled Lua card scripts), cards/names subsets, cardback |
 | `types/` | `cards.ts`, `ocgcore.ts` — shared TypeScript types |
 
@@ -67,8 +72,9 @@ which is kept for reference under [`legacy/`](legacy/) (see below).
 
 | Path | What it is |
 |---|---|
-| `engine/` | `duel.test.ts`, `ai.test.ts`, `cards.test.ts`, `i18n.test.ts`, `rules.test.ts` |
+| `engine/` | `duel.test.ts`, `ai.test.ts`, `cards.test.ts`, `rules.test.ts` |
 | `game/gameEngine.test.ts` | orchestrator tests |
+| `menu/config.test.ts` | saved-config/progress loading, including the legacy-id migration |
 | `render/` | `App.test.tsx`, `DuelScreen.test.tsx` |
 | `support/scenario.ts` | builds an exact board state (specific cards in field/hand/graveyard/deck), drives it with a script, and queries ocgcore directly — used to pin down rulings on specific card interactions |
 | `setup.ts` | vitest/jsdom setup |

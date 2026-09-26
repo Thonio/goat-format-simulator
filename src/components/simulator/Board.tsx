@@ -13,7 +13,6 @@ import type { GameSnapshot, GameEngine } from '../../game/gameEngine'
 import { computeBoardScale, computeLayout, HandOrder, type ZoneKey } from '../../render/layout'
 import { CardEl, CardFront } from './Card'
 import { useDrag } from '../../hooks/useDrag'
-import { T } from '../../i18n/i18n'
 
 function useBump() {
   return useReducer((x: number) => x + 1, 0)
@@ -29,27 +28,27 @@ function buildSlots(me: 0 | 1): Cell[] {
   const cells: Cell[] = []
   cells.push(blank())
   cells.push(s(foe, 'deck', 0, 'special', 'Deck'))
-  for (let i = 4; i >= 0; i--) cells.push(s(foe, 'st', i, 'st', 'M/T'))
+  for (let i = 4; i >= 0; i--) cells.push(s(foe, 'st', i, 'st', 'S/T'))
   cells.push(s(foe, 'extra', 0, 'special', 'Extra'))
   cells.push(blank())
 
-  cells.push(s(foe, 'banish', 0, 'banish', 'Desterradas'))
-  cells.push(s(foe, 'gy', 0, 'special', 'Cementerio'))
-  for (let i = 4; i >= 0; i--) cells.push(s(foe, 'm', i, '', 'Monstruo'))
-  cells.push(s(foe, 'field', 0, 'special', 'Campo'))
+  cells.push(s(foe, 'banish', 0, 'banish', 'Banished'))
+  cells.push(s(foe, 'gy', 0, 'special', 'Graveyard'))
+  for (let i = 4; i >= 0; i--) cells.push(s(foe, 'm', i, '', 'Monster'))
+  cells.push(s(foe, 'field', 0, 'special', 'Field'))
   cells.push(blank())
 
   cells.push({ divider: true })
 
   cells.push(blank())
-  cells.push(s(me, 'field', 0, 'special', 'Campo'))
-  for (let i = 0; i < 5; i++) cells.push(s(me, 'm', i, '', 'Monstruo'))
-  cells.push(s(me, 'gy', 0, 'special', 'Cementerio'))
-  cells.push(s(me, 'banish', 0, 'banish', 'Desterradas'))
+  cells.push(s(me, 'field', 0, 'special', 'Field'))
+  for (let i = 0; i < 5; i++) cells.push(s(me, 'm', i, '', 'Monster'))
+  cells.push(s(me, 'gy', 0, 'special', 'Graveyard'))
+  cells.push(s(me, 'banish', 0, 'banish', 'Banished'))
 
   cells.push(blank())
   cells.push(s(me, 'extra', 0, 'special', 'Extra'))
-  for (let i = 0; i < 5; i++) cells.push(s(me, 'st', i, 'st', 'M/T'))
+  for (let i = 0; i < 5; i++) cells.push(s(me, 'st', i, 'st', 'S/T'))
   cells.push(s(me, 'deck', 0, 'special', 'Deck'))
   cells.push(blank())
   return cells
@@ -68,7 +67,7 @@ export interface BoardProps {
   onCardHover: (card: DuelCard) => void
   onSlotClick: (owner: 0 | 1, zone: ZoneKey) => void
   handOrder: HandOrder
-  /** LP badges, phase strip, historial, toasts, prompt panel, controles…
+  /** LP badges, phase strip, history, toasts, prompt panel, controls…
    *  In the original (template.html) all of these live INSIDE `#stage`,
    *  which is the `position:relative` their absolute coordinates hang off
    *  of (`.lp{top:20px;left:20px}`, etc). If they're rendered outside
@@ -121,7 +120,7 @@ export function Board({ engine, snapshot, db, names, useImages, onCardClick, onC
       const availW = st.clientWidth - 24, availH = st.clientHeight - 16
       const root = getComputedStyle(document.documentElement)
       const CW = parseFloat(root.getPropertyValue('--cw')) || 116
-      const esc = parseFloat(root.getPropertyValue('--mano-mia')) || 1
+      const esc = parseFloat(root.getPropertyValue('--my-hand')) || 1
       const k = computeBoardScale({ availW, availH, gridW: gr.offsetWidth, gridH: gr.offsetHeight, cw: CW, myHandScale: esc })
       pl.style.transform = `scale(${k.toFixed(3)}) rotateX(var(--tilt))`
     }
@@ -136,8 +135,8 @@ export function Board({ engine, snapshot, db, names, useImages, onCardClick, onC
     if (!gr || !snapshot.zones) return
     const root = getComputedStyle(document.documentElement)
     const CW = parseFloat(root.getPropertyValue('--cw')) || 116
-    const MY_HAND_SCALE = parseFloat(root.getPropertyValue('--mano-mia')) || 1
-    const OPP_HAND_SCALE = parseFloat(root.getPropertyValue('--mano-rival')) || 1
+    const MY_HAND_SCALE = parseFloat(root.getPropertyValue('--my-hand')) || 1
+    const OPP_HAND_SCALE = parseFloat(root.getPropertyValue('--opp-hand')) || 1
     const order = handOrder.sync(allCards.filter((c) => c.location === LOC.HAND && c.controller === me).map((c) => c.uid))
     const zonePos = (owner: number, zone: ZoneKey, slot: number) => {
       const el = zoneRefs.current.get(`${owner}:${zone}:${slot}`)
@@ -226,7 +225,7 @@ function extraClasses(uid: number, s: GameSnapshot, drag: ReturnType<typeof useD
   const cls: string[] = []
   if (s.idle?.playable.has(uid)) cls.push('playable')
   if (s.idle?.actions.get(uid)?.activate !== undefined) cls.push('usable')
-  if (s.battle?.attacked.has(uid)) cls.push('gastada')
+  if (s.battle?.attacked.has(uid)) cls.push('spent')
   if (s.glowing.has(uid)) cls.push('glow')
   if (s.declaringUid === uid) cls.push('declaring')
   if (s.underAttack === uid) cls.push('underAttack')
@@ -248,11 +247,11 @@ function SlotEl({ cell, snapshot, onRef, onSlotClick }: {
   if (!occupied) classes.push('empty-label')
   if (cell.zone === 'gy' || cell.zone === 'extra' || cell.zone === 'banish') classes.push('browsable')
   if (cell.zone === 'm' || cell.zone === 'st' || cell.zone === 'field') classes.push('hitzona')
-  if (COUNTED.includes(cell.zone)) { classes.push('contable'); if (n > 0) classes.push('conCartas') }
+  if (COUNTED.includes(cell.zone)) { classes.push('countable'); if (n > 0) classes.push('has-cards') }
   return (
     <div ref={(el) => onRef(key, el)} className={classes.join(' ')}
       data-owner={cell.owner} data-zone={cell.zone} data-slot={cell.slot}
-      data-label={cell.label ? T(cell.label) : undefined} data-n={n}
+      data-label={cell.label} data-n={n}
       onClick={() => onSlotClick(cell.owner, cell.zone)} />
   )
 }

@@ -48,7 +48,7 @@ describe('GameEngine', () => {
     const engine = new GameEngine()
     const bootPromise = engine.boot({
       X, scriptReader, cardsRaw, names, deck: [...deck], extra: [...extra],
-      config: { chainMode: 'nunca' },
+      config: { chainMode: 'never' },
     })
     for (let i = 0; i < 4000 && !engine.getSnapshot().finished; i++) {
       await vi.runAllTimersAsync()
@@ -64,7 +64,7 @@ describe('GameEngine', () => {
   it('una decisión del lado humano pausa loop() hasta que se responde', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     const engine = new GameEngine()
-    const bootPromise = engine.boot({ X, scriptReader, cardsRaw, names, deck: [...deck], extra: [...extra], config: { chainMode: 'nunca' } })
+    const bootPromise = engine.boot({ X, scriptReader, cardsRaw, names, deck: [...deck], extra: [...extra], config: { chainMode: 'never' } })
 
     let sawPending = false
     let confirmedStable = false

@@ -140,13 +140,13 @@ function finish(
     : (loc === LOC.DECK || loc === LOC.EXTRA) ? true
     : isFD(card.position)
   const classes: string[] = []
-  if (loc === LOC.DECK || loc === LOC.GRAVE || loc === LOC.EXTRA || loc === LOC.REMOVED) classes.push('enMonton')
-  if (stacked) classes.push('apilada')
+  if (loc === LOC.DECK || loc === LOC.GRAVE || loc === LOC.EXTRA || loc === LOC.REMOVED) classes.push('inDeck')
+  if (stacked) classes.push('stacked')
   classes.push((isPreviewing || isRevealed) ? '' : hidden ? 'facedown' : '') // cleaned up below
-  if (isPreviewing) classes.push('colocando')
-  if (isRevealed) classes.push('revelada')
+  if (isPreviewing) classes.push('placing')
+  if (isRevealed) classes.push('revealed')
   if (loc === LOC.HAND && mine && !isPreviewing) classes.push('in-hand')
-  if (loc === LOC.HAND && !mine && !isRevealed) classes.push('mano-rival')
+  if (loc === LOC.HAND && !mine && !isRevealed) classes.push('opp-hand')
   if (mine) classes.push('mine')
   return {
     transform: `translate3d(${x}px,${y}px,${tz}px) rotateX(${rx}deg) rotateZ(${rz}deg) scale(${sc})`,

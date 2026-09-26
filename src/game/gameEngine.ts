@@ -22,7 +22,7 @@ import type { DuelEvent, OcgMessage, OcgNamespace } from '../types/ocgcore'
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
-export type ChainMode = 'auto' | 'always' | 'nunca'
+export type ChainMode = 'auto' | 'always' | 'never'
 
 const PHNAME: Record<number, string> = {
   1: 'Draw Phase', 2: 'Standby Phase', 4: 'Main Phase 1', 8: 'Battle Phase',
@@ -30,37 +30,37 @@ const PHNAME: Record<number, string> = {
   256: 'Main Phase 2', 512: 'End Phase',
 }
 /** Zone name by location code — so the UI can label the cards in
- *  `selectCards.list` ("Sangan (Cementerio)", etc). */
-export const LOCNAME: Record<number, string> = { 1: 'Deck', 2: 'mano', 4: 'campo', 8: 'M/T', 16: 'Cementerio', 32: 'desterradas', 64: 'Extra' }
+ *  `selectCards.list` ("Sangan (Graveyard)", etc). */
+export const LOCNAME: Record<number, string> = { 1: 'Deck', 2: 'hand', 4: 'field', 8: 'S/T', 16: 'Graveyard', 32: 'Banished', 64: 'Extra' }
 /** Difficulty label, so the UI can show the opponent's level. */
-export const LEVEL_LABEL: Record<Level, string> = { novato: 'Novato', normal: 'Normal', duro: 'Duro', experto: 'Experto' }
+export const LEVEL_LABEL: Record<Level, string> = { rookie: 'Rookie', normal: 'Normal', tough: 'Tough', expert: 'Expert' }
 // why the duel ended — the codes are the engine's own
-const REASONS: Record<number, string> = { 0: 'Puntos de vida a cero', 1: 'Se quedó sin cartas en el Deck', 2: 'Efecto de una carta', 3: 'Rendición', 4: 'Se acabó el tiempo' }
+const REASONS: Record<number, string> = { 0: 'Life Points reached zero', 1: 'Deck out', 2: 'Card effect', 3: 'Surrender', 4: 'Time ran out' }
 const RACES: Record<string, string> = {
-  1: 'Guerrero', 2: 'Mago', 4: 'Hada', 8: 'Demonio', 16: 'Zombi', 32: 'Máquina',
-  64: 'Aqua', 128: 'Piro', 256: 'Roca', 512: 'Bestia Alada', 1024: 'Planta', 2048: 'Insecto',
-  4096: 'Trueno', 8192: 'Dragón', 16384: 'Bestia', 32768: 'Bestia Guerrero',
-  65536: 'Dinosaurio', 131072: 'Pez', 262144: 'Serpiente Marina', 524288: 'Reptil',
+  1: 'Warrior', 2: 'Spellcaster', 4: 'Fairy', 8: 'Fiend', 16: 'Zombie', 32: 'Machine',
+  64: 'Aqua', 128: 'Pyro', 256: 'Rock', 512: 'Winged Beast', 1024: 'Plant', 2048: 'Insect',
+  4096: 'Thunder', 8192: 'Dragon', 16384: 'Beast', 32768: 'Beast-Warrior',
+  65536: 'Dinosaur', 131072: 'Fish', 262144: 'Sea Serpent', 524288: 'Reptile',
 }
-const ATTRIBUTES: Record<string, string> = { 1: 'FUEGO', 2: 'AGUA', 4: 'TIERRA', 8: 'VIENTO', 16: 'LUZ', 32: 'OSCURIDAD', 64: 'DIVINO' }
+const ATTRIBUTES: Record<string, string> = { 1: 'FIRE', 2: 'WATER', 4: 'EARTH', 8: 'WIND', 16: 'LIGHT', 32: 'DARK', 64: 'DIVINE' }
 /* Exactly what moment the question is asked at — the message itself
    carries the "timing". This matters in battle: responding at attack
    declaration versus already inside the Damage Step are two different
    plays with Book of Moon in hand. */
 const TIMINGS: Array<[number, string]> = [
-  [4096, 'Declaración de ataque'], [134217728, 'Tras el combate'],
-  [67108864, 'Fin del Battle Step'], [16777216, 'Battle Phase'],
-  [64, 'Invocación normal'], [128, 'Invocación especial'], [256, 'Invocación por volteo'],
-  [512, 'Al colocar monstruo'], [1024, 'Al colocar M/T'], [2048, 'Cambio de posición'],
-  [524288, 'Al destruirse'], [8388608, 'Al ir al cementerio'], [2097152, 'Al ir a la mano'],
-  [32768, 'Final de la cadena'], [8, 'Inicio de la Battle Phase'], [16, 'Fin de la Battle Phase'],
-  [4, 'Final de la Main Phase'], [32, 'End Phase'], [2, 'Standby Phase'], [1, 'Draw Phase'],
+  [4096, 'Attack declaration'], [134217728, 'After damage'],
+  [67108864, 'End of the Battle Step'], [16777216, 'Battle Phase'],
+  [64, 'Normal Summon'], [128, 'Special Summon'], [256, 'Flip Summon'],
+  [512, 'On Set monster'], [1024, 'On Set Spell/Trap'], [2048, 'On position change'],
+  [524288, 'On destruction'], [8388608, 'On sent to Graveyard'], [2097152, 'On returned to hand'],
+  [32768, 'End of chain'], [8, 'Start of Battle Phase'], [16, 'End of Battle Phase'],
+  [4, 'End of Main Phase'], [32, 'End Phase'], [2, 'Standby Phase'], [1, 'Draw Phase'],
 ]
 const TYPE_MONSTER = 0x1, TYPE_TRAP = 0x4, TYPE_FIELD = 0x80000
 const HIDDEN_LOCS = [1, 16, 32, 64]
-const CYCLE: Record<ChainMode, ChainMode> = { auto: 'always', always: 'nunca', nunca: 'auto' }
+const CYCLE: Record<ChainMode, ChainMode> = { auto: 'always', always: 'never', never: 'auto' }
 export const CHAIN_MODE_LABEL: Record<ChainMode, string> = {
-  auto: 'Cadenas: automáticas', always: 'Cadenas: preguntar siempre', nunca: 'Cadenas: no activar nada',
+  auto: 'Chains: automatic', always: 'Chains: always ask', never: 'Chains: never activate',
 }
 
 export interface PanelOption {
@@ -132,7 +132,7 @@ export interface GameConfig {
   opponentName?: string
   challenge?: ChallengeInfo
 }
-export interface LogEntry { ms: number; turn: number; who: 'tú' | 'rival'; phase: string; kind: string; data: unknown }
+export interface LogEntry { ms: number; turn: number; who: 'you' | 'opponent'; phase: string; kind: string; data: unknown }
 export interface CoinTossState { stage: 'spinning' | 'result' | 'hiding'; youStart: boolean }
 export interface PhaseAnnounceState { text: string; sub: string; mine: boolean }
 export interface BattleAnimState { uid: number; targetUid: number | null; stage: 'telegraph' | 'clash' | 'returning' }
@@ -160,7 +160,7 @@ export interface GameSnapshot {
   finished: boolean
   result: ResultInfo | null
   banner: { text: string; color?: string; key: number } | null
-  /** Short, transient notice (port of view.js:toast) — e.g. "that card
+  /** Short, transient notice (port of view.js:toast) — e.g. "That card
    *  can't be played right now" when dropped on an invalid zone. */
   toast: { text: string; key: number } | null
   history: Array<{ id: number; code: number; mine: boolean; kind: string }>
@@ -211,8 +211,8 @@ export class GameEngine {
   private dbRaw: CardsSubset = {}
   private chainMode: ChainMode = 'auto'
   private chainActive = false
-  private botLevel: Level = 'duro'
-  private brain: ((m: OcgMessage, intento?: number) => Record<string, unknown> | null) | null = null
+  private botLevel: Level = 'tough'
+  private brain: ((m: OcgMessage, attempt?: number) => Record<string, unknown> | null) | null = null
   // decisions that resolve themselves and are never shown
   private AUTO_KINDS = new Set<number>()
   private CHAIN_TIMEOUT = 15
@@ -333,7 +333,7 @@ export class GameEngine {
   private msgName(m: OcgMessage): string {
     const T = this.X.OcgMessageType
     for (const k in T) if (T[k] === m.type) return k
-    return 'tipo ' + m.type
+    return 'type ' + m.type
   }
   private snap(v: unknown, depth = 0): unknown {
     if (v === null || typeof v !== 'object') return typeof v === 'bigint' ? v.toString() + 'n' : v
@@ -350,12 +350,12 @@ export class GameEngine {
     const snapped = this.snap(data)
     this.LOG.push({
       ms: Date.now() - this.t0, turn: this.duel?.turnCount ?? 0,
-      who: this.duel?.turnPlayer === this.ME ? 'tú' : 'rival',
+      who: this.duel?.turnPlayer === this.ME ? 'you' : 'opponent',
       phase: PHNAME[this.duel?.phase ?? -1] ?? '', kind, data: snapped,
     })
     if (this.LOG.length > 6000) this.LOG.splice(0, 2000)
   }
-  private onEvent = (e: DuelEvent) => { this.logIt('evento', e); this.queue.push(e) }
+  private onEvent = (e: DuelEvent) => { this.logIt('event', e); this.queue.push(e) }
 
   // ── bot-mode progress (localStorage, same key as the menu) ──
   private recordVictory() {
@@ -377,16 +377,16 @@ export class GameEngine {
   }
   buildLogText(): string {
     const header = [
-      'GOAT FORMAT — registro de partida',
-      'fecha: ' + new Date().toISOString(),
-      'semilla: ' + this.SEED,
-      'modo cadenas: ' + this.chainMode,
-      'nivel del rival: ' + this.botLevel,
-      'tu mazo: ' + (this.CONFIG?.deckName ?? '?') + ' · mazo rival: ' + (this.CONFIG?.opponentName ?? '?'),
-      'desincronizaciones detectadas y corregidas: ' + (this.duel?.desyncs ?? 0),
-      'turno actual: ' + (this.duel?.turnCount ?? 0) + ' · fase: ' + (PHNAME[this.duel?.phase ?? -1] ?? ''),
-      'LP  tú: ' + this.duel?.lp[this.ME] + '   rival: ' + this.duel?.lp[1 - this.ME as 0 | 1],
-      'mazo: ' + this.safeJSON(this.DECKLOG),
+      'GOAT FORMAT — match log',
+      'date: ' + new Date().toISOString(),
+      'seed: ' + this.SEED,
+      'chain mode: ' + this.chainMode,
+      'opponent level: ' + this.botLevel,
+      'your deck: ' + (this.CONFIG?.deckName ?? '?') + ' · opponent deck: ' + (this.CONFIG?.opponentName ?? '?'),
+      'desyncs detected and repaired: ' + (this.duel?.desyncs ?? 0),
+      'current turn: ' + (this.duel?.turnCount ?? 0) + ' · phase: ' + (PHNAME[this.duel?.phase ?? -1] ?? ''),
+      'LP  you: ' + this.duel?.lp[this.ME] + '   opponent: ' + this.duel?.lp[1 - this.ME as 0 | 1],
+      'deck: ' + this.safeJSON(this.DECKLOG),
       ''.padEnd(70, '─'), '',
     ].join('\n')
     const body = this.LOG.map((e) => {
@@ -415,7 +415,7 @@ export class GameEngine {
   }
 
   private respondLogged(r: unknown, label?: string) {
-    this.logIt('tú_eliges', { accion: label, respuesta: r })
+    this.logIt('you_choose', { action: label, response: r })
     this.duel.respond(r)
   }
 
@@ -429,9 +429,9 @@ export class GameEngine {
   }
   private questionTiming(m: OcgMessage): string {
     const t = (((m.hint_timing as number) >>> 0) || ((m.hint_timing_other as number) >>> 0)) >>> 0
-    if (this.currentTiming === 'damage') return (t & 16384) ? 'Damage Step · cálculo de daño' : 'Damage Step'
+    if (this.currentTiming === 'damage') return (t & 16384) ? 'Damage Step · damage calculation' : 'Damage Step'
     for (const [bit, txt] of TIMINGS) if (t & bit) return txt
-    return this.currentTiming ? (this.currentTiming === 'attack' ? 'Declaración de ataque' : 'Damage Step') : ''
+    return this.currentTiming ? (this.currentTiming === 'attack' ? 'Attack declaration' : 'Damage Step') : ''
   }
 
   // ════════════════════════════════════════════════════════════
@@ -461,9 +461,9 @@ export class GameEngine {
       ;(c && c.location === 2 ? inHand : onField).add(uid)
     }
     this.idle = { actions, playable, inHand, onField, toBattlePhase: !!m.to_bp, toEndPhase: !!m.to_ep }
-    const btns: PanelOption[] = [{ label: 'Ver todas las acciones', run: () => this.fullIdlePanel(m) }]
+    const btns: PanelOption[] = [{ label: 'Show all actions', run: () => this.fullIdlePanel(m) }]
     this.setPanel(PHNAME[this.duel.phase] ?? 'Main Phase', btns,
-      playable.size ? 'Arrastra para jugar o reordenar tu mano · ✦ = efecto disponible' : 'No tienes jugadas disponibles')
+      playable.size ? 'Drag to play or reorder your hand · ✦ = effect available' : 'No plays available')
   }
 
   private sendIdle(r: unknown, label?: string) {
@@ -481,16 +481,16 @@ export class GameEngine {
       (list as Array<{ code: number }> | undefined ?? []).forEach((c, i) =>
         opts.push({ label: `${prefix} ${this.nm(c.code)}`, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action, index: i }) }))
     }
-    push(m.summons, IA.SELECT_SUMMON, 'Invocar')
-    push(m.special_summons, IA.SELECT_SPECIAL_SUMMON, 'Inv. especial')
-    push(m.activates, IA.SELECT_ACTIVATE, 'Activar')
-    push(m.monster_sets, IA.SELECT_MONSTER_SET, 'Colocar')
-    push(m.spell_sets, IA.SELECT_SPELL_SET, 'Colocar tapada')
-    push(m.pos_changes, IA.SELECT_POS_CHANGE, 'Cambiar posición')
+    push(m.summons, IA.SELECT_SUMMON, 'Summon')
+    push(m.special_summons, IA.SELECT_SPECIAL_SUMMON, 'Special Summon')
+    push(m.activates, IA.SELECT_ACTIVATE, 'Activate')
+    push(m.monster_sets, IA.SELECT_MONSTER_SET, 'Set')
+    push(m.spell_sets, IA.SELECT_SPELL_SET, 'Set')
+    push(m.pos_changes, IA.SELECT_POS_CHANGE, 'Change position')
     if (m.to_bp) opts.push({ label: '→ Battle Phase', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.TO_BP, index: null }) })
-    if (m.to_ep) opts.push({ label: '→ Terminar turno', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.TO_EP, index: null }) })
-    opts.push({ label: 'Volver', run: () => this.armIdle(m) })
-    this.setPanel('Todas las acciones', opts)
+    if (m.to_ep) opts.push({ label: '→ End turn', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.TO_EP, index: null }) })
+    opts.push({ label: 'Back', run: () => this.armIdle(m) })
+    this.setPanel('All actions', opts)
   }
 
   /** Drop a card from the hand onto a zone. Mirrors view.js onUp → main.js onDrop. */
@@ -503,31 +503,31 @@ export class GameEngine {
     const cancelDrop = (notice?: string) => {
       this.preferredPlace = null
       this.pendingPlacement = null
-      if (notice) { this.toast = { text: notice, key: ++this.toastKey }; this.logIt('aviso', { texto: notice }) }
+      if (notice) { this.toast = { text: notice, key: ++this.toastKey }; this.logIt('notice', { text: notice }) }
       this.commit()
     }
     const d = this.db.get(card.code)
     if (!d) return cancelDrop()
     const mon = !!(d.type & TYPE_MONSTER), trap = !!(d.type & TYPE_TRAP), isField = !!(d.type & TYPE_FIELD)
     const zoneOk = mon ? zone === 'm' : isField ? (zone === 'st' || zone === 'field') : zone === 'st'
-    if (!zoneOk) return cancelDrop(mon ? 'Los monstruos van en la zona de monstruos' : 'Las Mágicas y Trampas van en la zona de M/T')
+    if (!zoneOk) return cancelDrop(mon ? 'Monsters go in the Monster Zone' : 'Spells and Traps go in the Spell/Trap Zone')
     // under 2005 rules the Field Spell occupies slot 5 of S/T, not a separate zone
     this.preferredPlace = isField ? { zone: 'st', slot: 5 } : { zone, slot: slotIdx }
     const a = this.idle.actions.get(uid)
-    if (!a) return cancelDrop('Esa carta no se puede jugar ahora')
+    if (!a) return cancelDrop("That card can't be played right now")
     const R = this.X.OcgResponseType, IA = this.X.SelectIdleCMDAction
     const opts: PanelOption[] = []
-    if (a.summon !== undefined) opts.push({ label: 'Invocación normal', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SUMMON, index: a.summon }, 'Invocar ' + this.nm(card.code)) })
-    if (a.specialSummon !== undefined) opts.push({ label: 'Invocación especial', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SPECIAL_SUMMON, index: a.specialSummon }, 'Inv. especial ' + this.nm(card.code)) })
-    if (a.monsterSet !== undefined) opts.push({ label: 'Colocar boca abajo', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_MONSTER_SET, index: a.monsterSet }, 'Colocar ' + this.nm(card.code)) })
-    if (a.activate !== undefined) opts.push({ label: 'Activar', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_ACTIVATE, index: a.activate }, 'Activar ' + this.nm(card.code)) })
-    if (a.spellSet !== undefined) opts.push({ label: 'Colocar tapada', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SPELL_SET, index: a.spellSet }, 'Colocar tapada ' + this.nm(card.code)) })
-    if (!opts.length) return cancelDrop('Esa carta no se puede jugar ahora')
+    if (a.summon !== undefined) opts.push({ label: 'Normal Summon', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SUMMON, index: a.summon }, 'Summon ' + this.nm(card.code)) })
+    if (a.specialSummon !== undefined) opts.push({ label: 'Special Summon', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SPECIAL_SUMMON, index: a.specialSummon }, 'Special Summon ' + this.nm(card.code)) })
+    if (a.monsterSet !== undefined) opts.push({ label: 'Set face-down', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_MONSTER_SET, index: a.monsterSet }, 'Set ' + this.nm(card.code)) })
+    if (a.activate !== undefined) opts.push({ label: 'Activate', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_ACTIVATE, index: a.activate }, 'Activate ' + this.nm(card.code)) })
+    if (a.spellSet !== undefined) opts.push({ label: 'Set', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_SPELL_SET, index: a.spellSet }, 'Set ' + this.nm(card.code)) })
+    if (!opts.length) return cancelDrop("That card can't be played right now")
     // traps can only be set: no menu. And if there's only one option, no menu either.
     if ((trap && opts.length === 1) || opts.length === 1) return opts[0].run()
     this.choiceMenu = {
       title: this.nm(card.code),
-      options: [...opts, { label: 'Cancelar', run: () => cancelDrop() }],
+      options: [...opts, { label: 'Cancel', run: () => cancelDrop() }],
     }
     this.commit()
   }
@@ -541,10 +541,10 @@ export class GameEngine {
     if (!card) return
     const R = this.X.OcgResponseType, IA = this.X.SelectIdleCMDAction
     const opts: PanelOption[] = []
-    if (a.activate !== undefined) opts.push({ label: 'Activar', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_ACTIVATE, index: a.activate }, 'Activar ' + this.nm(card.code)) })
-    if (a.posChange !== undefined) opts.push({ label: 'Cambiar posición', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_POS_CHANGE, index: a.posChange }) })
+    if (a.activate !== undefined) opts.push({ label: 'Activate', primary: true, run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_ACTIVATE, index: a.activate }, 'Activate ' + this.nm(card.code)) })
+    if (a.posChange !== undefined) opts.push({ label: 'Change position', run: () => this.sendIdle({ type: R.SELECT_IDLECMD, action: IA.SELECT_POS_CHANGE, index: a.posChange }) })
     if (!opts.length) return
-    this.choiceMenu = { title: this.nm(card.code), options: [...opts, { label: 'Cancelar', run: () => { this.choiceMenu = null; this.commit() } }] }
+    this.choiceMenu = { title: this.nm(card.code), options: [...opts, { label: 'Cancel', run: () => { this.choiceMenu = null; this.commit() } }] }
     this.commit()
   }
 
@@ -579,8 +579,8 @@ export class GameEngine {
     const R = this.X.OcgResponseType, BA = this.X.SelectBattleCMDAction
     const btns: PanelOption[] = []
     ;(m.chains as Array<{ code: number }> | undefined ?? []).forEach((c, i) =>
-      btns.push({ label: `Activar ${this.nm(c.code)}`, run: () => this.sendBattle({ type: R.SELECT_BATTLECMD, action: BA.SELECT_CHAIN, index: i }) }))
-    this.setPanel('Battle Phase', btns, attackers.size ? 'Haz clic en un monstruo tuyo para declarar ataque' : 'No puedes atacar')
+      btns.push({ label: `Activate ${this.nm(c.code)}`, run: () => this.sendBattle({ type: R.SELECT_BATTLECMD, action: BA.SELECT_CHAIN, index: i }) }))
+    this.setPanel('Battle Phase', btns, attackers.size ? 'Click one of your monsters to declare an attack' : "You can't attack")
   }
   private sendBattle(r: unknown, label?: string) {
     this.battle = null; this.underAttack = null; this.declaringUid = null
@@ -596,7 +596,7 @@ export class GameEngine {
     if (i === undefined) return
     const card = this.duel.cards.get(uid)
     const R = this.X.OcgResponseType, BA = this.X.SelectBattleCMDAction
-    this.sendBattle({ type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: i }, 'Atacar con ' + (card ? this.nm(card.code) : uid))
+    this.sendBattle({ type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: i }, 'Attack with ' + (card ? this.nm(card.code) : uid))
   }
 
   // ════════════════════════════════════════════════════════════
@@ -619,16 +619,16 @@ export class GameEngine {
       case T.SELECT_CHAIN: {
         const selects = (m.selects as Array<{ code: number }> | undefined) ?? []
         const opts: PanelOption[] = selects.map((c, i) => ({
-          label: `Encadenar ${this.nm(c.code)}`, primary: true, run: () => send({ type: R.SELECT_CHAIN, index: i }),
+          label: `Chain ${this.nm(c.code)}`, primary: true, run: () => send({ type: R.SELECT_CHAIN, index: i }),
         }))
-        if (!m.forced) opts.push({ label: 'No responder', run: () => send({ type: R.SELECT_CHAIN, index: null }) })
+        if (!m.forced) opts.push({ label: "Don't respond", run: () => send({ type: R.SELECT_CHAIN, index: null }) })
         const timing = this.questionTiming(m)
-        this.setPanel(m.forced ? 'Efecto obligatorio — elige' : '¿Quieres responder?', opts,
-          m.forced ? null : 'Si no contestas, se pasa sola', timing)
+        this.setPanel(m.forced ? 'Mandatory effect — choose' : 'Respond?', opts,
+          m.forced ? null : "If you don't answer, it passes on its own", timing)
         if (!m.forced && this.CHAIN_TIMEOUT > 0) {
           this.startChainTimer(this.CHAIN_TIMEOUT, () => {
-            this.logIt('tiempo_agotado', { pregunta: 'SELECT_CHAIN' })
-            send({ type: R.SELECT_CHAIN, index: null }, 'sin respuesta (tiempo)')
+            this.logIt('time_out', { question: 'SELECT_CHAIN' })
+            send({ type: R.SELECT_CHAIN, index: null }, 'no response (time out)')
           })
         }
         this.commit()
@@ -636,30 +636,30 @@ export class GameEngine {
       }
       case T.SELECT_EFFECTYN: {
         const timing = this.questionTiming(m)
-        return this.setPanel(`¿Activar el efecto de ${this.nm(m.code as number)}?`, [
-          { label: 'Sí', primary: true, run: () => send({ type: R.SELECT_EFFECTYN, yes: true }) },
+        return this.setPanel(`Activate the effect of ${this.nm(m.code as number)}?`, [
+          { label: 'Yes', primary: true, run: () => send({ type: R.SELECT_EFFECTYN, yes: true }) },
           { label: 'No', run: () => send({ type: R.SELECT_EFFECTYN, yes: false }) },
         ], null, timing)
       }
       case T.SELECT_YESNO: {
         const cod = this.cardFromDescription(m.description)
         const timing = this.questionTiming(m)
-        return this.setPanel(cod ? `¿Activar el efecto de ${this.nm(cod)}?` : '¿Confirmas?', [
-          { label: 'Sí', primary: true, run: () => send({ type: R.SELECT_YESNO, yes: true }) },
+        return this.setPanel(cod ? `Activate the effect of ${this.nm(cod)}?` : 'Confirm?', [
+          { label: 'Yes', primary: true, run: () => send({ type: R.SELECT_YESNO, yes: true }) },
           { label: 'No', run: () => send({ type: R.SELECT_YESNO, yes: false }) },
         ], null, timing)
       }
       case T.SELECT_OPTION:
-        return this.setPanel('Elige una opción', ((m.options as unknown[] | undefined) ?? []).map((_o, i) => ({
-          label: `Opción ${i + 1}`, run: () => send({ type: R.SELECT_OPTION, index: i }),
+        return this.setPanel('Choose an option', ((m.options as unknown[] | undefined) ?? []).map((_o, i) => ({
+          label: `Option ${i + 1}`, run: () => send({ type: R.SELECT_OPTION, index: i }),
         })))
       case T.SELECT_POSITION: {
         const P = this.X.OcgPosition, o: PanelOption[] = []
         const positions = m.positions as number
-        if (positions & P.FACEUP_ATTACK) o.push({ label: 'Ataque', primary: true, run: () => send({ type: R.SELECT_POSITION, position: P.FACEUP_ATTACK }) })
-        if (positions & P.FACEUP_DEFENSE) o.push({ label: 'Defensa', run: () => send({ type: R.SELECT_POSITION, position: P.FACEUP_DEFENSE }) })
-        if (positions & P.FACEDOWN_DEFENSE) o.push({ label: 'Defensa boca abajo', run: () => send({ type: R.SELECT_POSITION, position: P.FACEDOWN_DEFENSE }) })
-        return this.setPanel('¿En qué posición?', o)
+        if (positions & P.FACEUP_ATTACK) o.push({ label: 'Attack', primary: true, run: () => send({ type: R.SELECT_POSITION, position: P.FACEUP_ATTACK }) })
+        if (positions & P.FACEUP_DEFENSE) o.push({ label: 'Defense', run: () => send({ type: R.SELECT_POSITION, position: P.FACEUP_DEFENSE }) })
+        if (positions & P.FACEDOWN_DEFENSE) o.push({ label: 'Face-down Defense', run: () => send({ type: R.SELECT_POSITION, position: P.FACEDOWN_DEFENSE }) })
+        return this.setPanel('In which position?', o)
       }
       case T.SELECT_CARD: case T.SELECT_TRIBUTE: case T.SELECT_UNSELECT_CARD: {
         const multi = m.type !== T.SELECT_UNSELECT_CARD
@@ -672,8 +672,8 @@ export class GameEngine {
         const uidOf = (i: number) => this.duel.resolve(list[i], list[i].code)?.uid ?? null
         this.selectCardsCtx = { list: list.map((c, i) => ({ uid: uidOf(i), code: c.code, location: c.location })), min, max, type: m.type as number, rt, canCancel: !!m.can_cancel, canFinish: !!m.can_finish, chosen: [], multi }
         const timing = this.questionTiming(m)
-        this.setPanel(`Selecciona ${min === max ? min : `${min}-${max}`} carta(s)`, [],
-          needsZoneView ? 'Hay cartas fuera del tablero: ábrelas para verlas' : 'Haz clic en las cartas marcadas, en el campo o en tu mano', timing)
+        this.setPanel(`Select ${min === max ? min : `${min}-${max}`} card(s)`, [],
+          needsZoneView ? 'Some cards are off the field: open them to look' : 'Click the highlighted cards, on the field or in your hand', timing)
         this.renderSelectCards()
         return
       }
@@ -687,10 +687,10 @@ export class GameEngine {
           if (valid) candidates.push(code)
         }
         this.announceCard = { candidates: candidates.length ? candidates : [...this.db.keys()] }
-        this.setPanel('Declara una carta', [])
+        this.setPanel('Declare a card', [])
         this.commit()
         // resolved with chooseAnnouncedCard(code); we save this turn's `send`
-        this.pendingAnnounceCardSend = (code: number) => send({ type: R.ANNOUNCE_CARD, card: code }, 'declara ' + this.nm(code))
+        this.pendingAnnounceCardSend = (code: number) => send({ type: R.ANNOUNCE_CARD, card: code }, 'declare ' + this.nm(code))
         return
       }
       case T.ANNOUNCE_RACE: case T.ANNOUNCE_ATTRIB: {
@@ -708,8 +708,8 @@ export class GameEngine {
         return
       }
       case T.ANNOUNCE_NUMBER:
-        return this.setPanel('Declara un número', ((m.options as number[] | undefined) ?? []).map((o, i) => ({
-          label: String(o), run: () => send({ type: R.ANNOUNCE_NUMBER, value: i }, 'declara ' + o),
+        return this.setPanel('Declare a number', ((m.options as number[] | undefined) ?? []).map((o, i) => ({
+          label: String(o), run: () => send({ type: R.ANNOUNCE_NUMBER, value: i }, 'declare ' + o),
         })))
       case T.SELECT_PLACE: case T.SELECT_DISFIELD: {
         const r = this.placeFromDrop(m) ?? this.decideAI(m, 0)
@@ -718,7 +718,7 @@ export class GameEngine {
       default: {
         const r = this.decideAI(m, 0)
         if (r) return send(r)
-        return this.setPanel(`Decisión no soportada (${m.type})`, [{ label: 'Continuar', run: () => { this.clearPanel(); this.commit(); void this.loop() } }])
+        return this.setPanel(`Unsupported decision (${m.type})`, [{ label: 'Continue', run: () => { this.clearPanel(); this.commit(); void this.loop() } }])
       }
     }
   }
@@ -738,11 +738,11 @@ export class GameEngine {
       run: () => {
         ctx.chosen.push(b)
         if (ctx.chosen.length >= ctx.count) {
-          send(isRace ? { type: R.ANNOUNCE_RACE, races: ctx.chosen } : { type: R.ANNOUNCE_ATTRIB, attributes: ctx.chosen }, 'declara ' + n)
+          send(isRace ? { type: R.ANNOUNCE_RACE, races: ctx.chosen } : { type: R.ANNOUNCE_ATTRIB, attributes: ctx.chosen }, 'declare ' + n)
         } else this.renderAnnounceRace(isRace, send)
       },
     }))
-    this.setPanel(isRace ? 'Declara un Tipo' : 'Declara un Atributo', opts, ctx.count > 1 ? `Elige ${ctx.count}` : null)
+    this.setPanel(isRace ? 'Declare a Type' : 'Declare an Attribute', opts, ctx.count > 1 ? `Choose ${ctx.count}` : null)
   }
   private renderSelectCards() {
     const ctx = this.selectCardsCtx!
@@ -779,14 +779,14 @@ export class GameEngine {
     const ctx = this.selectCardsCtx
     if (!ctx || !ctx.canCancel) return
     this.clearPanel(); this.selectCards = null; this.selectCardsCtx = null; this.zoneView = null
-    this.respondLogged({ type: ctx.rt, ...(ctx.multi ? { indicies: null } : { index: null }) }, 'cancelar')
+    this.respondLogged({ type: ctx.rt, ...(ctx.multi ? { indicies: null } : { index: null }) }, 'cancel')
     this.commit(); void this.loop()
   }
   finishSelectCards() {
     const ctx = this.selectCardsCtx
     if (!ctx || ctx.multi || !ctx.canFinish) return
     this.clearPanel(); this.selectCards = null; this.selectCardsCtx = null; this.zoneView = null
-    this.respondLogged({ type: ctx.rt, index: null }, 'terminar')
+    this.respondLogged({ type: ctx.rt, index: null }, 'finish')
     this.commit(); void this.loop()
   }
 
@@ -805,13 +805,13 @@ export class GameEngine {
 
   // ── zone viewer (graveyard/banished/extra) ──
   openZoneView(owner: 0 | 1, zone: 'gy' | 'extra' | 'banish') {
-    if (zone === 'extra' && owner !== this.ME) { this.logIt('aviso', { texto: 'No puedes ver el Extra Deck del rival' }); return }
+    if (zone === 'extra' && owner !== this.ME) { this.logIt('notice', { text: "You can't look at your opponent's Extra Deck" }); return }
     const ZL = { gy: 16, extra: 64, banish: 32 } as const
     const arr = (this.duel.zones[owner]?.[ZL[zone]] ?? []) as Array<DuelCard | null>
-    const whose = owner === this.ME ? 'tu' : 'del rival'
-    const title = zone === 'gy' ? 'Cementerio' : zone === 'extra' ? 'Extra Deck' : 'Cartas desterradas'
+    const whose = owner === this.ME ? 'yours' : "opponent's"
+    const title = zone === 'gy' ? 'Graveyard' : zone === 'extra' ? 'Extra Deck' : 'Banished cards'
     const cards = [...arr].reverse().filter((c): c is DuelCard => !!c).map((c) => ({ code: c.code }))
-    this.zoneView = { title: `${title} ${whose} — ${cards.length} carta(s)`, cards }
+    this.zoneView = { title: `${title} ${whose} — ${cards.length} card(s)`, cards }
     this.commit()
   }
   closeZoneView() { this.zoneView = null; this.commit() }
@@ -820,15 +820,15 @@ export class GameEngine {
   surrender() {
     if (this.surrendered) return
     this.surrendered = true
-    this.logIt('rendicion', { turno: this.duel?.turnCount, lpTuyos: this.duel?.lp?.[this.ME], lpRival: this.duel?.lp?.[1 - this.ME as 0 | 1] })
+    this.logIt('surrender', { turn: this.duel?.turnCount, myLp: this.duel?.lp?.[this.ME], opponentLp: this.duel?.lp?.[1 - this.ME as 0 | 1] })
     this.idle = null; this.battle = null; this.choiceMenu = null; this.pendingPlacement = null
     this.zoneView = null; this.clearPanel()
-    this.banner = { text: 'TE RINDES', color: '#ff6a55', key: ++this.bannerKey }
+    this.banner = { text: 'YOU SURRENDER', color: '#ff6a55', key: ++this.bannerKey }
     this.commit()
     setTimeout(() => {
       this.finished = true
       this.result = {
-        won: false, reason: 'Te has rendido',
+        won: false, reason: 'You surrendered',
         myLp: this.duel?.lp?.[this.ME] ?? 0, opponentLp: this.duel?.lp?.[1 - this.ME as 0 | 1] ?? 0,
         turns: this.duel?.turnCount ?? 0,
         myAvatar: this.CONFIG?.myAvatar, opponentAvatar: this.CONFIG?.opponentAvatar, opponentName: this.CONFIG?.opponentName,
@@ -839,7 +839,7 @@ export class GameEngine {
   /** Confirmation modal — the UI calls this to open the dialog before surrendering. */
   askSurrenderConfirm() {
     if (this.surrendered || this.finished) return
-    this.confirm = { title: '¿Seguro que quieres rendirte?', text: 'El duelo termina ahora mismo y cuenta como derrota.', yesLabel: 'Sí, rendirme' }
+    this.confirm = { title: 'Surrender this duel?', text: 'The duel ends right now and counts as a loss.', yesLabel: 'Yes, surrender' }
     this.confirmYes = () => this.surrender()
     this.commit()
   }
@@ -866,7 +866,7 @@ export class GameEngine {
       switch (e.t) {
         case 'turn': {
           const player = e.player as number
-          this.banner = { text: `Turno ${e.turn} — ${player === this.ME ? 'Tú' : 'Oponente'}`, color: player === this.ME ? 'var(--gold)' : '#ff8f7a', key: ++this.bannerKey }
+          this.banner = { text: `Turn ${e.turn} — ${player === this.ME ? 'You' : 'Opponent'}`, color: player === this.ME ? 'var(--gold)' : '#ff8f7a', key: ++this.bannerKey }
           this.commit(); await sleep(600); break
         }
         case 'phase': {
@@ -878,20 +878,20 @@ export class GameEngine {
         case 'draw': case 'pos': { this.commit(); await sleep(e.t === 'draw' ? 240 : 290); break }
         case 'move': {
           const to = e.to as { location?: number } | undefined, from = e.from as { location?: number } | undefined
-          if (to?.location === 32 && from?.location !== 32) this.logIt('aviso', { texto: `Desterrada: ${this.nm(e.code as number)}` })
+          if (to?.location === 32 && from?.location !== 32) this.logIt('notice', { text: `Banished: ${this.nm(e.code as number)}` })
           this.commit(); await sleep(290); break
         }
         case 'summon': {
           const uid = e.uid as number | undefined
           const card = uid ? this.duel.cards.get(uid) : undefined
-          this.addToHistory(e.code as number, card?.controller === this.ME, e.kind === 'flip' ? 'volteo' : 'invoca')
+          this.addToHistory(e.code as number, card?.controller === this.ME, e.kind === 'flip' ? 'flip' : 'summon')
           if (uid) { this.glow(uid, true); this.commit(); await sleep(400); this.glow(uid, false) }
-          this.logIt('aviso', { texto: `${e.kind === 'special' ? 'Invocación especial' : e.kind === 'flip' ? 'Invocación por volteo' : 'Invoca'}: ${this.nm(e.code as number)}` })
+          this.logIt('notice', { text: `${e.kind === 'special' ? 'Special Summon' : e.kind === 'flip' ? 'Flip Summon' : 'Summon'}: ${this.nm(e.code as number)}` })
           this.commit(); await sleep(180); break
         }
         case 'chain': {
           this.chainActive = true
-          this.addToHistory(e.code as number, e.controller === this.ME, 'cadena')
+          this.addToHistory(e.code as number, e.controller === this.ME, 'chain')
           if (e.uid) this.glow(e.uid as number, true)
           this.commit(); await sleep(500)
           if (e.uid) this.glow(e.uid as number, false)
@@ -902,7 +902,7 @@ export class GameEngine {
           const uids = (e.uids as number[] | undefined) ?? []
           if (uids.length) {
             this.revealed = new Set(uids)
-            this.logIt('aviso', { texto: e.location === 2 ? 'Se revela la mano del rival' : `Se revelan ${uids.length} carta(s)` })
+            this.logIt('notice', { text: e.location === 2 ? "Your opponent's hand is revealed" : `${uids.length} card(s) revealed` })
             this.commit(); await sleep(750)
           }
           break
@@ -914,13 +914,13 @@ export class GameEngine {
           break
         }
         case 'battle': await this.animateBattle(e.uid as number, (e.targetUid as number | null) ?? null); break
-        case 'attackCancelled': this.logIt('aviso', { texto: 'Ataque anulado' }); this.commit(); await sleep(220); break
+        case 'attackCancelled': this.logIt('notice', { text: 'Attack negated' }); this.commit(); await sleep(220); break
         case 'damage': this.popDamage(); this.commit(); await sleep(320); break
         case 'recover': case 'lp': this.commit(); await sleep(200); break
         case 'win': {
           const player = e.player as number
           if (player === this.ME) this.recordVictory()
-          this.banner = { text: player === this.ME ? '¡HAS GANADO!' : 'HAS PERDIDO', color: player === this.ME ? 'var(--gold)' : '#ff6a55', key: ++this.bannerKey }
+          this.banner = { text: player === this.ME ? 'YOU WIN!' : 'YOU LOSE', color: player === this.ME ? 'var(--gold)' : '#ff6a55', key: ++this.bannerKey }
           this.clearPanel(); this.idle = null; this.battle = null; this.revealed = new Set()
           this.commit(); await sleep(1500)
           this.finished = true
@@ -953,7 +953,7 @@ export class GameEngine {
     const phaseName = PHNAME[ph] ?? ''
     if (!phaseName || phaseName === this.lastPhase) return
     this.lastPhase = phaseName
-    const SUB: Record<number, string> = { 1: 'Robo', 2: 'Mantenimiento', 8: '¡A la batalla!', 512: 'Fin del turno' }
+    const SUB: Record<number, string> = { 1: 'Draw', 2: 'Standby', 8: 'To battle!', 512: 'End of turn' }
     this.phaseAnnounce = { text: phaseName, sub: SUB[ph] ?? '', mine }
     this.commit()
     await sleep(760)
@@ -964,7 +964,7 @@ export class GameEngine {
     this.declaringUid = uid
     this.underAttack = targetUid
     this.battleAnim = { uid, targetUid, stage: 'telegraph' }
-    this.logIt('aviso', { texto: targetUid ? 'Ataque declarado' : 'Ataque directo declarado' })
+    this.logIt('notice', { text: targetUid ? 'Attack declared' : 'Direct attack declared' })
     this.commit()
     await sleep(620)
     this.declaringUid = null; this.underAttack = null
@@ -986,8 +986,8 @@ export class GameEngine {
     catch (e) {
       const err = e as Error
       console.error(e)
-      this.logIt('ERROR', { msg: String(err?.message || err), pila: String(err?.stack || '').slice(0, 400) })
-      this.setPanel('Se ha roto algo', [{ label: 'Descargar log y avisar', primary: true, run: () => { /* the UI offers the download via buildLogText() */ } }], String(err?.message || err))
+      this.logIt('error', { msg: String(err?.message || err), stack: String(err?.stack || '').slice(0, 400) })
+      this.setPanel('Something broke', [{ label: 'Download the log and report it', primary: true, run: () => { /* the UI offers the download via buildLogText() */ } }], String(err?.message || err))
     }
   }
   private async loopInternal() {
@@ -1003,25 +1003,25 @@ export class GameEngine {
         const peeksAtOpponentHand = q.type === this.X.OcgMessageType.SELECT_CARD
           && ((q.selects as Array<{ location: number; controller: number }> | undefined) ?? []).some((s) => s.location === 2 && s.controller !== this.ME)
         const auto = peeksAtOpponentHand ? null : this.trivialFn(q)
-        if (auto) { this.logIt('auto', { pregunta: this.msgName(q), respuesta: auto }); this.duel.respond(auto); continue }
+        if (auto) { this.logIt('auto', { question: this.msgName(q), response: auto }); this.duel.respond(auto); continue }
         const triggerFromGY = ((q.selects as Array<{ location: number }> | undefined) ?? []).some((sel) => sel.location === 16)
-        if (q.type === this.X.OcgMessageType.SELECT_CHAIN && !q.forced && this.chainMode === 'nunca' && !triggerFromGY) {
+        if (q.type === this.X.OcgMessageType.SELECT_CHAIN && !q.forced && this.chainMode === 'never' && !triggerFromGY) {
           this.duel.respond({ type: this.X.OcgResponseType.SELECT_CHAIN, index: null }); continue
         }
         const ownTrigger = q.type === this.X.OcgMessageType.SELECT_CHAIN
           && ((q.selects as Array<{ location: number }> | undefined) ?? []).some((s) => s.location === 16)
         if (q.type === this.X.OcgMessageType.SELECT_CHAIN && !q.forced && !ownTrigger && this.chainMode === 'auto' && !this.chainActive && this.duel.turnPlayer === this.ME) {
-          this.logIt('auto', { pregunta: 'SELECT_CHAIN (ventana propia sin cadena)', respuesta: 'no responder' })
+          this.logIt('auto', { question: 'SELECT_CHAIN (own window with no chain)', response: 'do not respond' })
           this.duel.respond({ type: this.X.OcgResponseType.SELECT_CHAIN, index: null }); continue
         }
-        if (!this.AUTO_KINDS.has(q.type)) this.logIt('te_pregunta', { pregunta: this.msgName(q) })
+        if (!this.AUTO_KINDS.has(q.type)) this.logIt('asks_you', { question: this.msgName(q) })
         return this.ask(q)
       }
       if (q !== this.aiLast) { this.aiLast = q; this.aiAttempt = 0 }
       const r = this.trivialFn(q) ?? this.brain?.(q, this.aiAttempt) ?? this.decideAI(q, this.aiAttempt)
       this.aiAttempt++
-      if (!r) { this.logIt('ERROR', { msg: 'la IA no supo responder a ' + this.msgName(q) }); console.warn('IA sin respuesta', q); return }
-      this.logIt('ia', { pregunta: this.msgName(q), respuesta: r })
+      if (!r) { this.logIt('error', { msg: 'the AI could not answer ' + this.msgName(q) }); console.warn('AI had no response', q); return }
+      this.logIt('ai', { question: this.msgName(q), response: r })
       this.duel.respond(r)
       await sleep(160)
     }
@@ -1046,12 +1046,12 @@ export class GameEngine {
     // the coin toss comes before anything else: it decides which side you play
     const youStart = Math.random() < 0.5
     this.ME = youStart ? 0 : 1
-    this.logIt('sorteo', { empiezasTu: youStart })
+    this.logIt('coin_toss', { youStart })
     await this.coinTossSequence(youStart)
 
-    this.brain = createBrain({ X, duel: this.duel, db: this.db, names, level: this.botLevel, me: (1 - this.ME) as 0 | 1, log: (d) => this.logIt('ia_piensa', d) })
+    this.brain = createBrain({ X, duel: this.duel, db: this.db, names, level: this.botLevel, me: (1 - this.ME) as 0 | 1, log: (d) => this.logIt('ai_thinks', d) })
 
-    this.chainMode = this.chainMode // (parity with main.js's button cycle; no DOM to paint here)
+    // (parity with main.js's button cycle; no DOM to paint here)
 
     const shuffle = <A,>(a: A[]): A[] => {
       const b = [...a]
@@ -1063,7 +1063,7 @@ export class GameEngine {
     const s1 = this.ME === 0 ? opponentDeck : myDeck
     const e0 = this.ME === 0 ? extra : (extraRival ?? extra)
     const e1 = this.ME === 0 ? (extraRival ?? extra) : extra
-    this.logIt('mazos', { tuyo: config?.deckName, rival: config?.opponentName })
+    this.logIt('decks', { mine: config?.deckName, opponent: config?.opponentName })
     this.SEED = (Date.now() & 0xffff) + 1
     this.DECKLOG = { mine: myDeck, opponent: opponentDeck }
     await this.duel.create({ deck0: s0, deck1: s1, extra0: e0, extra1: e1, seed: [BigInt(this.SEED), 7n, 13n, 29n] })

@@ -1,17 +1,17 @@
 /* Puerto verbatim del bloque <style> de isola/engine/browser/src/template.html.
-   Mismos nombres de clase/id, mismas custom properties, mismos keyframes. */
+   Same class/id names, same custom properties, same keyframes. */
 :root{
   --cw:112px; --ch:163px; --colw:168px; --gap:8px; --tilt:11deg;
   --gold:#d8b45c; --blue:#4ea8ff; --bg0:#05070d; --bg1:#0b1020;
   --edge:rgba(120,160,220,.22); --ease:cubic-bezier(.22,.9,.28,1);
   --panelw:330px;
-  /* escala de las manos: en el móvil la tuya crece y la del rival encoge */
-  --mano-mia:1; --mano-rival:1;
+  /* hand scale: on mobile yours grows and the opponent's shrinks */
+  --my-hand:1; --opp-hand:1;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-/* 100% cuenta la altura como si no existieran la barra de URL ni la de
-   navegación de Android, y el tablero se salía por abajo. Con dvh la
-   altura es la REAL, y va cambiando cuando el navegador esconde su barra. */
+/* 100% counts the height as if the URL bar and the Android navigation bar
+   didn't exist, and the board overflowed off the bottom. With dvh the
+   height is the REAL one, and it changes as the browser hides its bar. */
 html,body{height:100%;height:100dvh}
 body{
   background:radial-gradient(1500px 900px at 55% 42%,#16203a 0%,var(--bg1) 45%,var(--bg0) 100%);
@@ -199,15 +199,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 @keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @media (max-height:900px){ :root{ --cw:96px; --ch:140px; --colw:145px; --panelw:300px } #banner{font-size:38px} }
 
-/* ── mano: la elevación al pasar el ratón es puro CSS.
-      Antes se guardaba en el estado y se quedaba pegada. ── */
+/* ── hand: the hover lift is pure CSS.
+      It used to be stored in state and it got stuck. ── */
 .card.in-hand{ z-index:auto }
 .card.in-hand .shake{ transition:transform .18s var(--ease) }
 .card.in-hand:hover{ z-index:300 !important }
 .card.in-hand:hover .shake{ transform:translateY(-46px) scale(1.3) }
 .card.dragging .shake{ transform:none !important }
 
-/* ── panel de acciones: a la derecha, centrado, estilo Hearthstone ── */
+/* ── action panel: on the right, centered, Hearthstone style ── */
 #prompt{
   position:absolute; right:112px; left:auto; bottom:auto; top:50%;
   transform:translateY(-50%); z-index:150; display:none;
@@ -218,7 +218,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 }
 #prompt .ptitle{font-size:13px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--gold);margin-bottom:5px;text-align:center}
-/* referencia de fase: en qué momento del turno te están preguntando */
+/* phase reference: at what moment of the turn you are being asked */
 #prompt .pfase{font-size:10px;letter-spacing:.18em;text-transform:uppercase;
   color:#8aa4c8;text-align:center;margin-bottom:7px;padding-bottom:6px;
   border-bottom:1px solid rgba(120,160,220,.18)}
@@ -274,7 +274,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 .face.back img{width:100%;height:100%;object-fit:fill;border-radius:3px;display:block}
 .face{border-radius:3px;box-shadow:0 10px 22px rgba(0,0,0,.7)}
 
-/* ═══ Animaciones con más peso ═══ */
+/* ═══ Heavier animations ═══ */
 :root{ --ease:cubic-bezier(.2,.9,.25,1); }
 .card{transition:filter .2s ease}
 .card.in-hand:hover .shake{transform:translateY(-52px) scale(1.34)}
@@ -337,7 +337,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   70%{opacity:1}
   100%{opacity:0;transform:translate(-50%,-50%) scaleX(1.06)}}
 
-/* ═══ Iconos en el menú contextual ═══ */
+/* ═══ Icons in the context menu ═══ */
 #choice .cbtn{display:flex;align-items:center;gap:12px}
 #choice .cico{width:26px;height:26px;flex:none;display:grid;place-items:center;
   border-radius:3px;font-size:14px;
@@ -347,7 +347,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #choice .cbtn:hover .cico{background:rgba(216,180,92,.32);color:#fff}
 
 
-/* ═══ Estética recta, más cercana al Yu-Gi-Oh! clásico ═══ */
+/* ═══ Straight aesthetic, closer to classic Yu-Gi-Oh! ═══ */
 .toast{border-radius:2px}
 .lp .val{font-family:"Segoe UI",system-ui,sans-serif}
 .slot{border-radius:2px}
@@ -367,7 +367,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #choice .cico{border-radius:0}
 #phasecard{border-left:none;border-right:none}
 
-/* ═══ Cuenta atrás de la ventana de respuesta ═══ */
+/* ═══ Response window countdown ═══ */
 #ptimer{margin:-4px 0 12px;display:flex;align-items:center;gap:10px}
 #ptimer .ptnum{font-size:15px;font-weight:800;color:var(--gold);
   font-variant-numeric:tabular-nums;min-width:34px;text-align:right;
@@ -377,9 +377,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #ptimer .ptbar i{display:block;height:100%;width:100%;
   background:linear-gradient(90deg,#a8842f,var(--gold));
   box-shadow:0 0 12px rgba(216,180,92,.7);transition:width .1s linear}
-#ptimer.urgente .ptnum{color:#ff6a55;text-shadow:0 0 14px rgba(255,90,70,.8);
+#ptimer.urgent .ptnum{color:#ff6a55;text-shadow:0 0 14px rgba(255,90,70,.8);
   animation:tictac .5s ease-in-out infinite}
-#ptimer.urgente .ptbar i{background:linear-gradient(90deg,#8f2a1e,#ff6a55);
+#ptimer.urgent .ptbar i{background:linear-gradient(90deg,#8f2a1e,#ff6a55);
   box-shadow:0 0 14px rgba(255,90,70,.85)}
 @keyframes tictac{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 
@@ -407,7 +407,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   background:conic-gradient(from 45deg,#7a5f1f,#e8c76a,#7a5f1f,#e8c76a,#7a5f1f);
   border:4px solid #3a2c0c;box-shadow:0 0 60px rgba(216,180,92,.55),
   inset 0 0 24px rgba(0,0,0,.45)}
-.coinWrap.girando{animation:coinSpin 1.5s cubic-bezier(.25,.6,.3,1)}
+.coinWrap.spinning{animation:coinSpin 1.5s cubic-bezier(.25,.6,.3,1)}
 @keyframes coinSpin{
   0%{transform:rotateY(0) translateY(0) scale(.7)}
   35%{transform:rotateY(900deg) translateY(-70px) scale(1.15)}
@@ -418,10 +418,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 .coinTxt{font-size:26px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
   color:#9db3d0;text-shadow:0 0 30px rgba(0,0,0,.9)}
 
-/* las cartas de debajo del montón no proyectan sombra: se sumaban */
-.card.apilada .face{box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+/* the cards underneath the pile cast no shadow: they added up */
+.card.stacked .face{box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 
-/* ═══ Menú de inicio ═══ */
+/* ═══ Start menu ═══ */
 #menu{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;
   background:radial-gradient(900px 600px at 50% 40%,#16203a,#05070d)}
 #menu .mcaja{width:600px;max-height:92vh;overflow:auto;padding:34px 38px;border:1px solid rgba(216,180,92,.4);
@@ -439,7 +439,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #menu .mrej button{padding:11px 8px;font-size:12px;letter-spacing:.06em;cursor:pointer;
   background:#121b2e;border:1px solid var(--edge);color:#cfe0f7;transition:.15s}
 #menu .mrej button:hover{border-color:var(--gold);color:#fff}
-#menu .mrej button.sel{background:linear-gradient(180deg,var(--gold),#a8842f);
+#menu .mrej button.selected{background:linear-gradient(180deg,var(--gold),#a8842f);
   border-color:var(--gold);color:#080c16;font-weight:700}
 #menu select{width:100%;padding:11px;background:#121b2e;border:1px solid var(--edge);
   color:#cfe0f7;font-size:13px;font-family:inherit;cursor:pointer}
@@ -493,21 +493,21 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #prompt #buscaRes{max-height:34vh;overflow:auto}
 
 /* ya han atacado / no se pueden jugar: apagadas */
-.card.gastada .face{filter:grayscale(.55) brightness(.62)}
-.card.gastada .face::after{content:"";position:absolute;inset:0;
+.card.spent .face{filter:grayscale(.55) brightness(.62)}
+.card.spent .face::after{content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(0,0,0,.25) 6px 12px)}
 .card.in-hand:not(.playable) .face{filter:brightness(.72) saturate(.75)}
-/* zona de clic más generosa sobre las cartas del campo */
+/* a more generous hit area over the cards on the field */
 .card::before{content:"";position:absolute;inset:-9px;border-radius:4px}
-/* contador de cartas del montón */
-.slot.contable::before{content:attr(data-n);position:absolute;bottom:-9px;right:-9px;
+/* card count of the pile */
+.slot.countable::before{content:attr(data-n);position:absolute;bottom:-9px;right:-9px;
   min-width:24px;height:22px;padding:0 6px;display:none;place-items:center;
   font-size:12px;font-weight:800;color:#0a1018;background:linear-gradient(180deg,var(--gold),#a8842f);
   border:1px solid #6d5316;z-index:4}
-.slot.contable.conCartas:hover::before{display:grid}
-.slot.contable:hover{border-color:var(--gold)}
+.slot.countable.has-cards:hover::before{display:grid}
+.slot.countable:hover{border-color:var(--gold)}
 
-/* galería de mazos con la carta que los identifica */
+/* deck gallery with the identifying card */
 .galeria{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;max-height:250px;overflow:auto;
   padding:2px}
 .galeria .mz{position:relative;height:74px;overflow:hidden;cursor:pointer;
@@ -518,35 +518,35 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(5,8,16,.15),rgba(5,8,16,.92))}
 .galeria .mz:hover{border-color:var(--gold);transform:translateY(-2px)}
 .galeria .mz:hover img{opacity:.75}
-.galeria .mz.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 20px rgba(216,180,92,.45)}
-.galeria .mz.sel img{opacity:.8}
+.galeria .mz.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 20px rgba(216,180,92,.45)}
+.galeria .mz.selected img{opacity:.8}
 .galeria .mzn{position:absolute;left:6px;right:6px;bottom:15px;z-index:2;font-size:10px;
   line-height:1.15;color:#eef4ff;text-shadow:0 1px 4px #000;font-weight:600}
 .galeria .mzc{position:absolute;left:6px;bottom:4px;z-index:2;font-size:9px;color:var(--gold)}
-.galeria .mz.mal .mzc{color:#ff8f7a}
+.galeria .mz.invalid .mzc{color:#ff8f7a}
 
-/* ═══ Colocación provisional: la carta se queda donde la sueltas ═══ */
-.card.colocando{cursor:default}
-.card.colocando .face{box-shadow:0 0 0 2px var(--gold),0 0 40px rgba(216,180,92,.75),
+/* ═══ Provisional placement: the card stays where you drop it ═══ */
+.card.placing{cursor:default}
+.card.placing .face{box-shadow:0 0 0 2px var(--gold),0 0 40px rgba(216,180,92,.75),
   0 18px 34px rgba(0,0,0,.8)}
-.card.colocando .shake{animation:posando .28s var(--ease)}
+.card.placing .shake{animation:posando .28s var(--ease)}
 @keyframes posando{from{transform:scale(1.16)}to{transform:scale(1)}}
 
 /* ═══ Zonas de clic generosas ═══ */
 .card::before{inset:-15px}
 .card.in-hand::before{inset:-8px -3px}
-.card.enMonton{pointer-events:none}
+.card.inDeck{pointer-events:none}
 .slot.hitzona::before{content:"";position:absolute;inset:-10px}
 
-.slot.contable::before{bottom:-11px;right:-11px;min-width:26px;height:24px;font-size:12.5px;
+.slot.countable::before{bottom:-11px;right:-11px;min-width:26px;height:24px;font-size:12.5px;
   box-shadow:0 3px 10px rgba(0,0,0,.65)}
-.slot.contable.conCartas::before{display:grid}
-.slot.contable.conCartas:hover::before{display:grid;transform:scale(1.16);
+.slot.countable.has-cards::before{display:grid}
+.slot.countable.has-cards:hover::before{display:grid;transform:scale(1.16);
   box-shadow:0 0 16px rgba(216,180,92,.8)}
 
-#topbar .soloMovil{display:none}
+#topbar .mobile-only{display:none}
 
-/* ═══ Móvil y táctil ═══ */
+/* ═══ Mobile and touch ═══ */
 #stage,#grid,#cardLayer,.card,.slot,#ghost{touch-action:none}
 *{-webkit-tap-highlight-color:transparent}
 @media (max-width:1250px){
@@ -555,7 +555,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 }
 @media (max-width:900px), (max-height:560px), (pointer:coarse) and (max-width:1250px){
   :root{ --cw:66px; --ch:96px; --colw:100px; --gap:4px; --tilt:5deg;
-         --mano-mia:1.35; --mano-rival:.58 }
+         --my-hand:1.35; --opp-hand:.58 }
   #side{display:block;position:absolute;left:0;top:38px;z-index:46;
     width:104px;max-height:calc(100% - 150px);padding:6px;border-right:none;
     background:linear-gradient(180deg,rgba(10,16,30,.92),rgba(6,10,20,.86));
@@ -571,7 +571,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
     padding-top:max(4px,env(safe-area-inset-top));
     padding-left:max(8px,env(safe-area-inset-left));
     padding-right:max(8px,env(safe-area-inset-right))}
-  #topbar .soloMovil{display:block;font-size:13px;padding:4px 9px}
+  #topbar .mobile-only{display:block;font-size:13px;padding:4px 9px}
   #controles{bottom:max(6px,env(safe-area-inset-bottom))}
   #prompt{bottom:max(6px,env(safe-area-inset-bottom));
     right:max(6px,env(safe-area-inset-right))}
@@ -585,7 +585,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   #phases{display:flex;right:3px;top:50%;gap:2px}
   .ph{padding:2px 4px;font-size:6.5px;letter-spacing:.04em;min-width:0;border-radius:1px}
   .ph.on{transform:none;box-shadow:0 0 8px rgba(216,180,92,.5)}
-  .ph.conSub::after{font-size:6px;margin-top:1px}
+  .ph.withSub::after{font-size:6px;margin-top:1px}
   #stage{padding-top:2px}
   .lp{padding:4px 8px;gap:7px}
   .lp .avat{width:30px;height:30px;border-width:1px}
@@ -612,7 +612,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   #historial .hcarta{width:24px;height:35px}
   #historial .hcarta:hover{transform:none}
   #fasesCentro .fc{padding:2px 7px;font-size:7.5px;letter-spacing:.06em}
-  #fasesCentro .fc.conSub::after{font-size:7px;padding:1px 5px;top:calc(100% + 2px)}
+  #fasesCentro .fc.withSub::after{font-size:7px;padding:1px 5px;top:calc(100% + 2px)}
   #banner{font-size:24px;letter-spacing:.1em}
   #phasecard{min-width:0;padding:8px 22px}
   #phasecard .pcmain{font-size:19px;letter-spacing:.12em}
@@ -680,12 +680,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
   border:1px solid var(--edge);background:#111a2c;color:#5f7594;transition:.14s}
 #mBots .bpip:hover{border-color:var(--gold);color:#fff;transform:translateY(-2px)}
-#mBots .bpip.hecho{color:#0a1018;border-color:transparent}
-#mBots .bpip.n0.hecho{background:linear-gradient(180deg,#cd9b6a,#8a5f38)}
-#mBots .bpip.n1.hecho{background:linear-gradient(180deg,#d8dde6,#98a1af)}
-#mBots .bpip.n2.hecho{background:linear-gradient(180deg,#f0d27a,#b8902f)}
-#mBots .bpip.n3.hecho{background:linear-gradient(180deg,#9ff0d8,#3aa88c)}
-#mBots .bfila.completo{border-color:var(--gold);box-shadow:0 0 0 1px rgba(216,180,92,.35)}
+#mBots .bpip.done{color:#0a1018;border-color:transparent}
+#mBots .bpip.n0.done{background:linear-gradient(180deg,#cd9b6a,#8a5f38)}
+#mBots .bpip.n1.done{background:linear-gradient(180deg,#d8dde6,#98a1af)}
+#mBots .bpip.n2.done{background:linear-gradient(180deg,#f0d27a,#b8902f)}
+#mBots .bpip.n3.done{background:linear-gradient(180deg,#9ff0d8,#3aa88c)}
+#mBots .bfila.complete{border-color:var(--gold);box-shadow:0 0 0 1px rgba(216,180,92,.35)}
 #bResumen{margin-bottom:10px}
 
 /* ═══ Historial visual de lo jugado ═══ */
@@ -699,8 +699,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   animation:hentra .3s var(--ease)}
 @keyframes hentra{from{opacity:0;transform:translateY(10px) scale(.8)}to{opacity:1;transform:none}}
 #historial .hcarta img{width:100%;height:100%;object-fit:cover;display:block}
-#historial .hcarta.mia{border-color:rgba(216,180,92,.75)}
-#historial .hcarta.suya{border-color:rgba(255,143,122,.7)}
+#historial .hcarta.mine{border-color:rgba(216,180,92,.75)}
+#historial .hcarta.theirs{border-color:rgba(255,143,122,.7)}
 #historial .hcarta:hover{transform:translateX(14px) scale(1.7);z-index:5;
   box-shadow:0 10px 24px rgba(0,0,0,.85)}
 #historial .hnom{font-size:7px;line-height:1.1;color:#cfe0f7;padding:2px;display:block}
@@ -716,7 +716,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   background:conic-gradient(from 0deg at 50% 45%,transparent 0deg,rgba(216,180,92,.16) 12deg,
     transparent 24deg,transparent 36deg,rgba(216,180,92,.16) 48deg,transparent 60deg);
   animation:girarLuz 22s linear infinite}
-#fin.pierde .finLuz{background:conic-gradient(from 0deg at 50% 45%,transparent 0deg,
+#fin.loses .finLuz{background:conic-gradient(from 0deg at 50% 45%,transparent 0deg,
   rgba(255,90,70,.13) 14deg,transparent 28deg,transparent 42deg,rgba(255,90,70,.13) 56deg,transparent 70deg)}
 @keyframes girarLuz{to{transform:rotate(360deg)}}
 #fin .finCaja{position:relative;text-align:center;padding:0 30px;
@@ -725,16 +725,16 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 #fin .finTitulo{font-size:76px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;
   color:var(--gold);text-shadow:0 0 70px rgba(216,180,92,.75),0 6px 18px rgba(0,0,0,.9);
   animation:finLatir 2.6s ease-in-out infinite}
-#fin.pierde .finTitulo{color:#ff7a63;text-shadow:0 0 70px rgba(255,90,70,.6),0 6px 18px rgba(0,0,0,.9)}
+#fin.loses .finTitulo{color:#ff7a63;text-shadow:0 0 70px rgba(255,90,70,.6),0 6px 18px rgba(0,0,0,.9)}
 @keyframes finLatir{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 #fin .finSub{margin-top:6px;font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:#9db3d0}
 #fin .finDuelistas{display:flex;align-items:center;justify-content:center;gap:34px;margin:34px 0 18px}
 #fin .finD{display:flex;flex-direction:column;align-items:center;gap:7px;opacity:.5;
   transition:.3s var(--ease)}
-#fin .finD.gana{opacity:1;transform:scale(1.06)}
+#fin .finD.wins{opacity:1;transform:scale(1.06)}
 #fin .finD img{width:96px;height:96px;object-fit:cover;border:2px solid rgba(120,160,220,.35);
   background:#0c1220;box-shadow:0 10px 30px rgba(0,0,0,.8)}
-#fin .finD.gana img{border-color:var(--gold);box-shadow:0 0 34px rgba(216,180,92,.6),0 10px 30px rgba(0,0,0,.8)}
+#fin .finD.wins img{border-color:var(--gold);box-shadow:0 0 34px rgba(216,180,92,.6),0 10px 30px rgba(0,0,0,.8)}
 #fin .finN{font-size:13px;letter-spacing:.1em;color:#dfe7f5}
 #fin .finLP{font-size:19px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
 #fin .finVs{font-size:15px;letter-spacing:.2em;color:#5f7594}
@@ -744,8 +744,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
   text-transform:uppercase;cursor:pointer;font-family:inherit;color:#cfe0f7;
   background:#141f36;border:1px solid var(--edge);transition:.16s}
 #fin .finBtn:hover{border-color:var(--gold);color:#fff}
-#fin .finBtn.primario{background:linear-gradient(180deg,var(--gold),#a8842f);color:#080c16;border:none}
-#fin .finBtn.primario:hover{filter:brightness(1.12);box-shadow:0 0 30px rgba(216,180,92,.6)}
+#fin .finBtn.primary{background:linear-gradient(180deg,var(--gold),#a8842f);color:#080c16;border:none}
+#fin .finBtn.primary:hover{filter:brightness(1.12);box-shadow:0 0 30px rgba(216,180,92,.6)}
 
 /* ═══ Avatares junto a los puntos de vida ═══ */
 .lp .avat{width:56px;height:56px;object-fit:cover;border-radius:2px;flex:none;
@@ -757,43 +757,43 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;
 .lp.hurt .avat{animation:golpe .5s var(--ease)}
 @keyframes golpe{0%,100%{transform:none}30%{transform:translateX(-5px) rotate(-3deg)}
   60%{transform:translateX(4px) rotate(2deg)}}
-/* elegir avatar en el menú */
+/* pick an avatar in the menu */
 #mAvatares{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-height:184px;overflow:auto;padding:2px}
 #mAvatares .av{position:relative;aspect-ratio:1;cursor:pointer;border:1px solid var(--edge);
   background:#0d1424;transition:.14s var(--ease);overflow:hidden}
 #mAvatares .av img{width:100%;height:100%;object-fit:cover;opacity:.72;display:block}
 #mAvatares .av:hover{border-color:var(--gold);transform:translateY(-2px)}
 #mAvatares .av:hover img{opacity:1}
-#mAvatares .av.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 16px rgba(216,180,92,.5)}
-#mAvatares .av.sel img{opacity:1}
+#mAvatares .av.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 16px rgba(216,180,92,.5)}
+#mAvatares .av.selected img{opacity:1}
 
-/* La mano del rival no es información que puedas usar: se apaga. */
-.card.mano-rival .face{opacity:.62;filter:saturate(.8) brightness(.85)}
+/* The opponent's hand is not information you can use: it is dimmed. */
+.card.opp-hand .face{opacity:.62;filter:saturate(.8) brightness(.85)}
 
-/* ═══ Cartas reveladas por un efecto (Trap Dustshoot y compañía) ═══ */
-.card.revelada{cursor:pointer}
-.card.revelada .face{box-shadow:0 0 0 2px #ffd77a,0 0 46px rgba(255,215,122,.85),
+/* ═══ Cards revealed by an effect (Trap Dustshoot and the like) ═══ */
+.card.revealed{cursor:pointer}
+.card.revealed .face{box-shadow:0 0 0 2px #ffd77a,0 0 46px rgba(255,215,122,.85),
   0 24px 48px rgba(0,0,0,.9)}
-.card.revelada .shake{animation:revelarIn .34s var(--ease)}
+.card.revealed .shake{animation:revelarIn .34s var(--ease)}
 @keyframes revelarIn{from{transform:scale(.82) rotateY(50deg)}to{transform:none}}
 
 /* ═══ Damage Step: no es una fase de la tira, se marca encima de Battle ═══ */
-#fasesCentro .fc.conSub{position:relative}
-#fasesCentro .fc.conSub::after{content:attr(data-sub);position:absolute;
+#fasesCentro .fc.withSub{position:relative}
+#fasesCentro .fc.withSub::after{content:attr(data-sub);position:absolute;
   left:50%;top:calc(100% + 5px);transform:translateX(-50%);white-space:nowrap;
   font-size:9px;letter-spacing:.12em;padding:3px 9px;font-weight:800;
   color:#1a1206;background:linear-gradient(180deg,#ffd39a,#e59a3c);
   border:1px solid #b3701f;box-shadow:0 4px 14px rgba(0,0,0,.6)}
-#fasesCentro .fc.conSub.enDamage::after{background:linear-gradient(180deg,#ff9d7a,#d5452a);
+#fasesCentro .fc.withSub.inDamage::after{background:linear-gradient(180deg,#ff9d7a,#d5452a);
   border-color:#8f2a1e;color:#fff;animation:latido 1s ease-in-out infinite}
 @keyframes latido{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.09)}}
-.ph.conSub::after{content:attr(data-sub);display:block;margin-top:4px;
+.ph.withSub::after{content:attr(data-sub);display:block;margin-top:4px;
   font-size:8.5px;letter-spacing:.1em;color:#ffb257}
-.ph.conSub.enDamage::after{color:#ff8f7a}
+.ph.withSub.inDamage::after{color:#ff8f7a}
 
-/* ═══ Rendirse ═══ */
-.btn.peligro{color:#ffb3a5;border-color:rgba(255,110,80,.45)}
-.btn.peligro:hover{color:#fff;border-color:#ff6a55;background:rgba(255,80,60,.18)}
+/* ═══ Surrender ═══ */
+.btn.danger{color:#ffb3a5;border-color:rgba(255,110,80,.45)}
+.btn.danger:hover{color:#fff;border-color:#ff6a55;background:rgba(255,80,60,.18)}
 #confirm{position:fixed;inset:0;z-index:480;display:none;align-items:center;
   justify-content:center;background:rgba(3,6,14,.82);backdrop-filter:blur(3px)}
 #confirm .cfcaja{width:420px;max-width:88vw;padding:26px 28px;

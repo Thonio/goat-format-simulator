@@ -8,7 +8,6 @@
 import { useEffect, useState } from 'react'
 import type { GameEngine, GameSnapshot } from '../../game/gameEngine'
 import type { NamesSubset } from '../../types/cards'
-import { T } from '../../i18n/i18n'
 
 export function ChainTimer({ deadline }: { deadline: number | null }) {
   const [, tick] = useState(0)
@@ -23,7 +22,7 @@ export function ChainTimer({ deadline }: { deadline: number | null }) {
   const pct = Math.max(0, Math.min(100, (remaining / total) * 100))
   const urgent = remaining < 4000
   return (
-    <div id="ptimer" className={urgent ? 'urgente' : ''}>
+    <div id="ptimer" className={urgent ? 'urgent' : ''}>
       <span className="ptnum">{Math.ceil(remaining / 1000)}</span>
       <div className="ptbar"><i style={{ width: pct + '%' }} /></div>
     </div>
@@ -41,15 +40,15 @@ export function PromptPanel({ engine, snapshot, names }: { engine: GameEngine; s
 
   return (
     <div id="prompt" style={{ display: 'block' }}>
-      {panel?.timing && <div className="pfase">{T(panel.timing)}</div>}
-      <div className="ptitle">{T(panel?.title ?? (selectCards ? 'Selecciona cartas' : 'Declara una carta'))}</div>
-      {panel?.note && <div className="pnote">{T(panel.note)}</div>}
+      {panel?.timing && <div className="pfase">{panel.timing}</div>}
+      <div className="ptitle">{panel?.title ?? (selectCards ? 'Select cards' : 'Declare a card')}</div>
+      {panel?.note && <div className="pnote">{panel.note}</div>}
       {snapshot.chainActive && <ChainTimer deadline={snapshot.chainDeadline} />}
 
       {selectCards && (
         <div className="popts">
           <div className="pnote">
-            {T(`Selecciona ${selectCards.min === selectCards.max ? selectCards.min : `${selectCards.min}-${selectCards.max}`} carta(s)`)}
+            {`Select ${selectCards.min === selectCards.max ? selectCards.min : `${selectCards.min}-${selectCards.max}`} card(s)`}
           </div>
           {selectCards.list.map((item, i) => (
             <button key={i} className={`btn${selectCards.chosen.includes(i) ? ' gold' : ''}`}
@@ -57,14 +56,14 @@ export function PromptPanel({ engine, snapshot, names }: { engine: GameEngine; s
               {nameOf(names, item.code)}
             </button>
           ))}
-          {selectCards.canFinish && <button className="btn gold" onClick={() => engine.finishSelectCards()}>{T('Terminar')}</button>}
-          {selectCards.canCancel && <button className="btn" onClick={() => engine.cancelSelectCards()}>{T('Cancelar')}</button>}
+          {selectCards.canFinish && <button className="btn gold" onClick={() => engine.finishSelectCards()}>Finish</button>}
+          {selectCards.canCancel && <button className="btn" onClick={() => engine.cancelSelectCards()}>Cancel</button>}
         </div>
       )}
 
       {announceCard && (
         <>
-          <input placeholder={T('Buscar…') ?? 'Buscar…'} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} />
           <div id="buscaRes" className="popts">
             {announceCard.candidates
               .filter((c) => !query || nameOf(names, c).toLowerCase().includes(query.toLowerCase()))
@@ -79,7 +78,7 @@ export function PromptPanel({ engine, snapshot, names }: { engine: GameEngine; s
       {panel && (
         <div className="popts">
           {panel.options.map((o, i) => (
-            <button key={i} className={`btn${o.primary ? ' gold' : ''}`} onClick={o.run}>{T(o.label)}</button>
+            <button key={i} className={`btn${o.primary ? ' gold' : ''}`} onClick={o.run}>{o.label}</button>
           ))}
         </div>
       )}

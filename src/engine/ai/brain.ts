@@ -22,9 +22,9 @@ import type { GoatDuel } from '../duel'
 import type { CardRow, NamesSubset } from '../../types/cards'
 import type { OcgMessage, OcgNamespace } from '../../types/ocgcore'
 
-export const LEVELS = ['novato', 'normal', 'duro', 'experto'] as const
+export const LEVELS = ['rookie', 'normal', 'tough', 'expert'] as const
 export type Level = (typeof LEVELS)[number]
-const RANK: Record<Level, number> = { novato: 0, normal: 1, duro: 2, experto: 3 }
+const RANK: Record<Level, number> = { rookie: 0, normal: 1, tough: 2, expert: 3 }
 
 interface ListItem {
   code: number
@@ -64,7 +64,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
   /* Expert-level rule ablation. With GOAT_AI_OFF="key,key" you switch
      them off one at a time to measure how much each rule contributes in
      the tournament: that's how you find out what was making it lose to
-     "duro". In the browser the variable doesn't exist, so they're all on. */
+     "tough". In the browser the variable doesn't exist, so they're all on. */
   // `process` isn't declared here on purpose: this file also ships to the
   // browser app bundle (tsconfig.app.json has no "node" types), where the
   // feature-detect below must still just see it as absent, not error.
@@ -96,9 +96,9 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
      `medir-lastres.mjs`, not from guessing. */
   const HANDICAPS: Record<Level, Handicap> = {
     /* Measured with `medir-lastres.mjs`, 250 games per profile, against the
-       clean brain: novato loses 84%, normal 66%, and duro 60%.
+       clean brain: rookie loses 84%, normal 66%, and tough 60%.
        The numbers come from there, not from intuition. */
-    novato: {
+    rookie: {
       error: 0.50, noChains: true, dumbChain: false, dumbCombat: true,
       dumbTarget: true, badSelection: true, noRemoval: true,
       noPosition: true, noHolding: true,
@@ -108,12 +108,12 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       dumbTarget: true, badSelection: true, noRemoval: true,
       noPosition: false, noHolding: false,
     },
-    duro: {
+    tough: {
       error: 0.20, noChains: false, dumbChain: true, dumbCombat: false,
       dumbTarget: true, badSelection: false, noRemoval: false,
       noPosition: false, noHolding: true,
     },
-    experto: {
+    expert: {
       error: 0, noChains: false, dumbChain: false, dumbCombat: false,
       dumbTarget: false, badSelection: false, noRemoval: false,
       noPosition: false, noHolding: false,
@@ -168,7 +168,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
     const v = viewOf(duel, me, db, names)
     const rush = urgency(v)
 
-    // ─ Novato: does the first thing it can, with no criteria ─
+    // ─ Rookie: does the first thing it can, with no criteria ─
     if (n === 0) {
       const options: Array<{ a: number; i: number }> = []
       ;(m.summons as ListItem[] | undefined || []).forEach((_c, i) => options.push({ a: IA.SELECT_SUMMON, i }))
@@ -201,15 +201,15 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       if (info.role === 'beater' || info.role === 'bomb') p += 1.2
       if (info.noSet) p += 0.4 // Sangan wants to attack
       // don't duplicate ATK: Snatch Steal kills two birds with one stone
-      if (exp('atkDuplicado') && v.monsters.some((x) => !x.faceDown && atk(x) === atk(c))) p -= 1.5
+      if (exp('duplicateAtk') && v.monsters.some((x) => !x.faceDown && atk(x) === atk(c))) p -= 1.5
       // don't overextend if the opponent has set cards and I already have a board
       if (n >= 2 && v.monsters.length >= 2 && v.opponentHiddenCount > 0 && advantage(v) >= 0) p -= 1.4
-      addPlan(p, IA.SELECT_SUMMON, i, `invocar ${c.name}`)
+      addPlan(p, IA.SELECT_SUMMON, i, `summon ${c.name}`)
     })
 
     ;(m.special_summons as ListItem[] | undefined || []).forEach((l, i) => {
       const c = cardFromList(l)
-      addPlan(4.5 + atk(c) / 1000, IA.SELECT_SPECIAL_SUMMON, i, `inv. especial ${c.name}`)
+      addPlan(4.5 + atk(c) / 1000, IA.SELECT_SPECIAL_SUMMON, i, `special summon ${c.name}`)
     })
 
     /* 2. SET a monster face-down */
@@ -222,13 +222,13 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       if (v.monsters.length === 0) p += 0.6
       // if something bigger is on the other side, setting it is correct
       if (opponentCeiling && atk(c) <= opponentCeiling) p += 1.4
-      addPlan(p, IA.SELECT_MONSTER_SET, i, `colocar ${c.name}`)
+      addPlan(p, IA.SELECT_MONSTER_SET, i, `set ${c.name}`)
     })
 
     /* 3. ACTIVATE SPELL/TRAP: this is where almost all the judgment lives */
     ;(m.activates as ListItem[] | undefined || []).forEach((l, i) => {
       const c = cardFromList(l), info = infoOf(c), name = canon(c.name)
-      let p = 1.0, why = `activar ${c.name}`
+      let p = 1.0, why = `activate ${c.name}`
 
       switch (info.role) {
         case 'draw':
@@ -237,8 +237,8 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
             // only a real +1 if there's a free discard
             const free = hasInHand(v, 'Sinister Serpent') || v.hand.some((x) => roleOf(x) === 'chaff')
             p = free ? 5.5 : 2.0 + rush * 2.2
-            why += free ? ' (hay descarte gratis)'
-              : (rush > 0.7 ? ' (sin descarte ideal, pero hay prisa)' : ' (sin descarte bueno: mejor esperar)')
+            why += free ? ' (a free discard is available)'
+              : (rush > 0.7 ? ' (no ideal discard, but we are in a hurry)' : ' (no good discard: better to wait)')
           }
           break
         case 'handRip':
@@ -252,11 +252,11 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
           break
         case 'removal': {
           const target = biggestThreat(v)
-          if (!target) { p = 0.2; why += ' (sin objetivo)'; break }
+          if (!target) { p = 0.2; why += ' (no target)'; break }
           // don't spend removal on something you kill in combat
           const canKillInCombat = n >= 2 && v.monsters.some((x) => !x.faceDown && winsCombat(x, target))
           p = canKillInCombat ? 0.6 : 3.2 + power(target) / 1500
-          if (canKillInCombat) why += ' (lo mato en combate, no la gasto)'
+          if (canKillInCombat) why += ' (I kill it in combat, do not spend it)'
           if (exp('ring') && name === 'Ring of Destruction') {
             // Ring: for something big, or to finish off life points
             const finishes = v.lp.opponent <= power(target)
@@ -265,7 +265,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
               : power(target) >= 1700 ? 3.8
                 : cantKillInCombat ? 2.4 + rush * 1.6
                   : 1.0 + rush
-            if (finishes) why += ' (remata la partida)'
+            if (finishes) why += ' (finishes the game)'
           }
           if (n >= 2 && name === 'Nobleman of Crossout') {
             const hasSetMonster = v.opponentMonsters.some((c2) => c2.faceDown)
@@ -280,7 +280,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
             // MST is saved for equips and revivals
             const hasGoodTarget = v.opponentBackrow.some((c2) => !c2.faceDown && ['equipSteal', 'revival'].includes(roleOf(c2)))
             p = hasGoodTarget ? 5.0 : 0.8 + rush * 2.0
-            why += hasGoodTarget ? ' (sobre un equipo/reanimación)' : ' (no la malgasto en tapadas)'
+            why += hasGoodTarget ? ' (onto an equip/revival)' : ' (not wasting it on set cards)'
           } else p = 2.2
           break
         }
@@ -288,14 +288,14 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
           const theirs = v.opponentBackrow.length, mine = v.backrow.length
           if (n >= 2) {
             p = (theirs >= 2 && theirs > mine) ? 4.4 + theirs * 0.4 : 0.4 + rush
-            if (exp('masiva') && theirs < 3 && !v.monsters.length) p = 0.3 + rush * 1.2
+            if (exp('massRemoval') && theirs < 3 && !v.monsters.length) p = 0.3 + rush * 1.2
           } else p = theirs ? 3.0 : 0.2
           break
         }
         case 'stall': {
           // Scapegoat blocks your own summon: not on your own turn
           p = (n >= 2) ? 0.05 : 1.5
-          why += ' (mejor encadenarla en el turno rival)'
+          why += ' (better chained on the opponent turn)'
           break
         }
         case 'revival': {
@@ -303,7 +303,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
           if (!best) { p = 0.1; break }
           p = 3.4 + atk(best) / 1400
           if (n >= 2 && info.lpCost && v.lp.mine < 2000) p -= 2.0
-          if (exp('revivir') && v.opponentHiddenCount >= 2) p -= 1.0 // they'll respond to it
+          if (exp('revive') && v.opponentHiddenCount >= 2) p -= 1.0 // they'll respond to it
           break
         }
         case 'equipSteal': {
@@ -318,7 +318,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
           if (exp('fusion')) {
             p = (bigOpponent && power(bigOpponent) >= 1500) ? 5.2 : (haveToken ? 2.2 + rush * 1.8 : 0.6 + rush)
           } else p = haveToken ? 3.0 : 1.2
-          if (exp('fusion') && !bigOpponent) why += ' (sin objetivo que absorber)'
+          if (exp('fusion') && !bigOpponent) why += ' (no target to absorb)'
           break
         }
         case 'lock': p = 3.0; break
@@ -336,8 +336,8 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       let p = 1.4
       if (info.reactive || info.quick) p += 1.4 // traps and quick-plays want to be set
       if (n >= 2 && v.backrow.length >= 3) p -= 1.2 // don't fill up the whole backrow
-      if (exp('cabras') && canon(c.name) === 'Scapegoat') p += 1.2 // set it to chain later
-      addPlan(p, IA.SELECT_SPELL_SET, i, `colocar ${c.name}`)
+      if (exp('scapegoat') && canon(c.name) === 'Scapegoat') p += 1.2 // set it to chain later
+      addPlan(p, IA.SELECT_SPELL_SET, i, `set ${c.name}`)
     })
 
     /* 5. CHANGE POSITION
@@ -362,7 +362,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       // the FLIP bit can't be trusted in this database (Des Lacooda and
       // Medusa Worm come without it), so the table's role is also checked
       const isFlip = !!((c.data?.type ?? 0) & 0x200000) || info.role === 'flip' || info.prefersSet
-      let p: number, why = `girar ${c.name}`
+      let p: number, why = `change position: ${c.name}`
 
       /* Flipping for the sake of flipping is this bot's trap: the scanner
          counted Tsukuyomi flipped almost six times per game. A flip is
@@ -377,38 +377,38 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
               : true
 
       if (faceDown) { // flipping = flip summon
-        if (isFlip && flipWorks) { p = 2.4; why += ' (invocación por volteo: dispara su efecto)' }
-        else if (isFlip) { p = 0.2; why += ' (su efecto no conseguiría nada ahora)' }
-        else if (!threat) { p = 1.5; why += ' (campo rival vacío: la saco a pegar)' }
-        else if (atk(c) > ceiling) { p = 1.3; why += ' (a cara descubierta gana el combate)' }
-        else { p = 0.05; why += ' (descubierta se la comen)' }
+        if (isFlip && flipWorks) { p = 2.4; why += ' (flip summon: triggers its effect)' }
+        else if (isFlip) { p = 0.2; why += ' (its effect would achieve nothing now)' }
+        else if (!threat) { p = 1.5; why += ' (opponent field empty: bring it out to hit)' }
+        else if (atk(c) > ceiling) { p = 1.3; why += ' (face-up it wins the combat)' }
+        else { p = 0.05; why += ' (face-up it gets eaten)' }
       } else if (isDefense) { // defense → attack
-        if (!threat) { p = 1.6 + atk(c) / 2500; why += ' (a atacar: no hay nada delante)' }
-        else if (atk(c) > ceiling) { p = 1.4; why += ' (ya gana el combate)' }
-        else { p = 0.05; why += ' (atacando no consigue nada)' }
+        if (!threat) { p = 1.6 + atk(c) / 2500; why += ' (to attack: nothing in the way)' }
+        else if (atk(c) > ceiling) { p = 1.4; why += ' (it already wins the combat)' }
+        else { p = 0.05; why += ' (attacking achieves nothing)' }
       } else { // attack → defense
-        if (threat && ceiling >= atk(c) && def(c) > atk(c)) { p = 1.2; why += ' (se refugia: no aguanta de frente)' }
-        else { p = 0.05; why += ' (no hace falta esconderla)' }
+        if (threat && ceiling >= atk(c) && def(c) > atk(c)) { p = 1.2; why += ' (takes refuge: it cannot hold face-up)' }
+        else { p = 0.05; why += ' (no need to hide it)' }
       }
 
       // loop brake: flipping the same card over and over is never a plan
       const uid = real?.uid ?? `${l.code}:${l.sequence}`
       const timesFlipped = flipCounts.get(uid) ?? 0
-      if (timesFlipped >= 2) { p = Math.min(p, 0.05); why += ` (ya girada ${timesFlipped} veces)` }
+      if (timesFlipped >= 2) { p = Math.min(p, 0.05); why += ` (already flipped ${timesFlipped} times)` }
 
       addPlan(p, IA.SELECT_POS_CHANGE, i, why, uid)
     })
 
     plan.sort((a, b) => b.score - a.score)
     /* Level flaw: every so often it deliberately picks a worse move. It's
-       not decorative noise — it's what separates novato from experto,
+       not decorative noise — it's what separates rookie from expert,
        and it can be measured by turning it off. */
     if (handicap.error && plan.length > 1 && random(handicap.error))
       plan.unshift(plan.splice(1 + ((Math.random() * (plan.length - 1)) | 0), 1)[0])
 
     const chosen = plan[attempt]
     if (chosen && chosen.score > 0.8) {
-      trace(chosen.why, { puntos: +chosen.score.toFixed(2) })
+      trace(chosen.why, { score: +chosen.score.toFixed(2) })
       if (chosen.action === IA.SELECT_POS_CHANGE && chosen.uid != null)
         flipCounts.set(chosen.uid, (flipCounts.get(chosen.uid) ?? 0) + 1)
       return { type: R.SELECT_IDLECMD, action: chosen.action, index: chosen.index }
@@ -474,7 +474,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
 
     if (attempt < list.length) {
       lastAttacker = list[attempt].c
-      trace(`ataca con ${list[attempt].c.name}`, { valor: +list[attempt].p.toFixed(2) })
+      trace(`attack with ${list[attempt].c.name}`, { value: +list[attempt].p.toFixed(2) })
       return { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: list[attempt].i }
     }
     return { type: R.SELECT_BATTLECMD, action: m.to_m2 ? BA.TO_M2 : BA.TO_EP, index: null }
@@ -511,12 +511,12 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
        have a counter-trap" without checking whose link was on top. */
     const topLink = duel.chainLinks?.[duel.chainLinks.length - 1] ?? null
     if (topLink && topLink.controller === me) {
-      trace('no me encadeno a mi propia carta')
+      trace('never chain onto my own card')
       return { type: R.SELECT_CHAIN, index: null }
     }
     const ordered = options.map((o) => ({ ...o, p: score(o) })).filter((o) => o.p > 2.4).sort((a, b) => b.p - a.p)
     if (attempt < ordered.length) {
-      trace(`encadena ${ordered[attempt].c.name}`)
+      trace(`chain ${ordered[attempt].c.name}`)
       return { type: R.SELECT_CHAIN, index: ordered[attempt].i }
     }
     return { type: R.SELECT_CHAIN, index: null }
@@ -554,7 +554,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       let chosen = good[0] ?? candidates.sort((a, b) => power(a.target) - power(b.target))[0]
       // picking the right attack target is where the real skill is
       if (handicap.dumbTarget) chosen = candidates[(Math.random() * candidates.length) | 0]
-      trace(`objetivo: ${chosen.target.name}`)
+      trace(`target: ${chosen.target.name}`)
       return { type: R.SELECT_CARD, indicies: [chosen.i] }
     }
     /* Thousand-Eyes Restrict absorbs by copying the target's ATK. If it
@@ -569,7 +569,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
       const faceUp = opponents.filter((x) => !x.faceDown)
       if (faceUp.length) {
         const best = faceUp.sort((a, b) => power(b.c) - power(a.c))[0]
-        trace(`objetivo boca arriba: ${best.c.name}`)
+        trace(`face-up target: ${best.c.name}`)
         return { type: R.SELECT_CARD, indicies: [best.i] }
       }
     }
@@ -655,7 +655,7 @@ export function createBrain({ X, duel, db, names, level = 'normal', me = 1, log,
           if (!d) continue
           let valid = true
           try { valid = X.cardMatchesOpcode(d, m.opcodes) } catch { valid = true }
-          if (valid) { trace(`declara ${names[code]?.name ?? code}`); return { type: R.ANNOUNCE_CARD, card: code } }
+          if (valid) { trace(`declare ${names[code]?.name ?? code}`); return { type: R.ANNOUNCE_CARD, card: code } }
         }
         return null
       }

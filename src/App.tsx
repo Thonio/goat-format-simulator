@@ -7,7 +7,6 @@ import { DuelScreen } from './components/simulator/DuelScreen'
 import { Menu } from './components/simulator/menu/Menu'
 import { findDeck, listDecks, loadConfig, saveConfig, avatarSrc, avatarName, AVATAR_AI, type MenuConfig } from './components/simulator/menu/config'
 import type { StartOptions } from './components/simulator/menu/Play'
-import { setLanguage } from './i18n/i18n'
 import type { CardsSubset, NamesSubset } from './types/cards'
 import type { OcgNamespace } from './types/ocgcore'
 
@@ -49,29 +48,27 @@ function App() {
   const [engine, setEngine] = useState<GameEngine | null>(null)
   const modsPromise = useRef<Promise<EngineModules> | null>(null)
 
-  useEffect(() => { setLanguage(cfg.language) }, [cfg.language])
-
   useEffect(() => {
     modsPromise.current = loadEngineModules()
-    modsPromise.current.then(setEngineMods).catch((e) => console.error('No se pudieron cargar los módulos del motor', e))
+    modsPromise.current.then(setEngineMods).catch((e) => console.error('The engine modules could not be loaded', e))
   }, [])
 
   const launchDuel = useCallback(async (options: StartOptions = {}) => {
     const mods = engineMods ?? await (modsPromise.current ?? loadEngineModules())
     const { X, scriptReader, cardsRaw, names } = mods
     const mine = findDeck(cardsRaw, cfg.deck)
-    if (!mine) { alert('Elige un mazo.'); return }
-    if (mine.main.length < 40) { alert(`"${mine.name}" tiene ${mine.main.length} cartas; hacen falta 40.`); return }
+    if (!mine) { alert('Pick a deck.'); return }
+    if (mine.main.length < 40) { alert(`"${mine.name}" has ${mine.main.length} cards; 40 are required.`); return }
     const included = listDecks(cardsRaw).filter((m) => !m.custom && !m.warning)
     const aiDeck = options.opponentDeck ?? cfg.opponentDeck
-    let opponent = aiDeck === '__mismo__' ? mine
-      : aiDeck === '__azar__' ? included[(Math.random() * included.length) | 0]
+    let opponent = aiDeck === '__same__' ? mine
+      : aiDeck === '__random__' ? included[(Math.random() * included.length) | 0]
       : findDeck(cardsRaw, aiDeck) ?? included[0]
     if (!opponent || opponent.main.length < 40) opponent = included[0]
     const myDeck = { deck: [...mine.main], extra: [...mine.extra] }
     const foeDeck = { deck: [...opponent.main], extra: [...opponent.extra] }
     const missing = [...new Set([...myDeck.deck, ...myDeck.extra, ...foeDeck.deck, ...foeDeck.extra])].filter((c) => !cardsRaw[String(c)])
-    if (missing.length) { alert('Hay cartas fuera del pool de Goat (' + missing.length + ').'); return }
+    if (missing.length) { alert('Some cards are outside the Goat pool (' + missing.length + ').'); return }
 
     if (globalThis.matchMedia?.('(pointer:coarse)')?.matches || (globalThis.innerWidth ?? 1920) < 900) void fullscreen()
 
@@ -87,7 +84,7 @@ function App() {
         myAvatar: { src: avatarSrc(cfg.avatar), name: avatarName(cfg.avatar) },
         opponentAvatar: { src: avatarSrc(AVATAR_AI), name: avatarName(AVATAR_AI) },
       },
-    }).catch((e) => console.error('Error al arrancar el duelo', e))
+    }).catch((e) => console.error('Failed to start the duel', e))
   }, [cfg, engineMods])
 
   const onStart = useCallback((options?: StartOptions) => {
@@ -103,15 +100,14 @@ function App() {
   }
   if (screen === 'booting') {
     return (
-      <div id="boot"><div><h1>GOAT FORMAT</h1><p>Cargando el núcleo de reglas…</p>
+      <div id="boot"><div><h1>GOAT FORMAT</h1><p>Loading the rules core…</p>
         <div className="bar"><i /></div></div></div>
     )
   }
   return (
     <Menu cfg={cfg} setCfg={setCfgAndSave}
       cardsRaw={engineMods?.cardsRaw ?? null}
-      onStart={onStart}
-      onLanguageChange={setLanguage} />
+      onStart={onStart} />
   )
 }
 

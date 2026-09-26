@@ -43,7 +43,7 @@ describe('DuelScreen', () => {
     const engine = new GameEngine()
     const bootPromise = engine.boot({
       X, scriptReader, cardsRaw, names, deck: [...deck], extra: [...extra],
-      config: { chainMode: 'nunca' },
+      config: { chainMode: 'never' },
     })
 
     const { container } = render(<DuelScreen engine={engine} useImages={false} />)

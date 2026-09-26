@@ -31,8 +31,8 @@ describe('la IA está viva', () => {
     const duel = new GoatDuel({ lib, X, cardDb, scriptReader, onEvent: () => {} })
     await duel.create({ deck0: [...deck], deck1: [...deck], extra0: extra, extra1: extra, seed: [42n, 7n, 13n, 29n] })
     const trivial = makeTrivialResolver(X)
-    const brain0 = createBrain({ X, duel, db: cardDb, names, level: 'experto', me: 0 })
-    const brain1 = createBrain({ X, duel, db: cardDb, names, level: 'experto', me: 1 })
+    const brain0 = createBrain({ X, duel, db: cardDb, names, level: 'expert', me: 0 })
+    const brain1 = createBrain({ X, duel, db: cardDb, names, level: 'expert', me: 1 })
 
     let last: OcgMessage | null = null, att = 0
     for (let step = 0; step < 4000; step++) {
@@ -68,7 +68,7 @@ describe('la IA no se encadena a su propia carta', () => {
       chainLinks: [{ code: 41420027 /* Trap Dustshoot */, controller: 1, uid: 999 }],
       resolve: () => null,
     }
-    const brain = createBrain({ X, duel: fakeDuel as unknown as GoatDuel, db: cardDb, names, level: 'experto', me: 1 })
+    const brain = createBrain({ X, duel: fakeDuel as unknown as GoatDuel, db: cardDb, names, level: 'expert', me: 1 })
     const m = {
       type: T.SELECT_CHAIN, forced: false,
       selects: [{ code: 41420027, controller: 1, location: LOC.SZONE, sequence: 0 }],

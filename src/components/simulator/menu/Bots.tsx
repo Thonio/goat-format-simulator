@@ -1,4 +1,3 @@
-import { T } from '../../../i18n/i18n'
 import type { CardsSubset } from '../../../types/cards'
 import { AVATARS, LEVEL_LABEL, LEVELS, avatarSrc, listDecks, progress, saveConfig, type MenuConfig } from './config'
 import type { StartOptions } from './Play'
@@ -25,27 +24,27 @@ export function Bots({ cfg, setCfg, cardsRaw, onStart, onBack }: BotsProps) {
 
   return (
     <div className="mpant" id="pBots">
-      <h2>{T('Modo Bots')}</h2>
-      <p className="msub">{T('Gana a cada mazo en las cuatro dificultades.')}</p>
-      <label className="mlab">{T('Tu mazo')}</label>
+      <h2>Bot Mode</h2>
+      <p className="msub">Beat every deck on all four difficulties.</p>
+      <label className="mlab">Your deck</label>
       <select id="bMazo" value={currentDeck} onChange={(e) => { const next = { ...cfg, deck: e.target.value }; setCfg(next); saveConfig(next) }}>
         {all.map((m) => <option key={m.id} value={m.id}>{m.name} — {m.main.length}{m.warning ? ' ⚠' : ''}</option>)}
       </select>
-      <div className="mnota" id="bResumen">{T(`${beaten} de ${total} retos superados`)}</div>
+      <div className="mnota" id="bResumen">{beaten} of {total} challenges beaten</div>
       <div id="mBots">
         {included.map((m, idx) => {
           const done = LEVELS.filter((lv) => prog[m.id]?.[lv]).length
           const avatar = avatarKeys[idx % avatarKeys.length]
           return (
-            <div key={m.id} className={'bfila' + (done === LEVELS.length ? ' completo' : '')}>
+            <div key={m.id} className={'bfila' + (done === LEVELS.length ? ' complete' : '')}>
               <img className="bcara" src={avatarSrc(avatar)} alt="" />
-              <span className="bnom">{m.name}<small>{T(`${done}/${LEVELS.length} dificultades`)}</small></span>
+              <span className="bnom">{m.name}<small>{done}/{LEVELS.length} difficulties</small></span>
               <span className="bniv">
                 {LEVELS.map((lv, i) => (
-                  <button key={lv} className={`bpip n${i}` + (prog[m.id]?.[lv] ? ' hecho' : '')}
-                    title={`${m.name} · ${T(LEVEL_LABEL[lv])}`}
+                  <button key={lv} className={`bpip n${i}` + (prog[m.id]?.[lv] ? ' done' : '')}
+                    title={`${m.name} · ${LEVEL_LABEL[lv]}`}
                     onClick={() => onStart({ opponentDeck: m.id, level: lv, challenge: { opponentDeck: m.id, level: lv } })}>
-                    {(T(LEVEL_LABEL[lv]) ?? LEVEL_LABEL[lv]).slice(0, 3).toUpperCase()}
+                    {LEVEL_LABEL[lv].slice(0, 3).toUpperCase()}
                   </button>
                 ))}
               </span>
@@ -53,7 +52,7 @@ export function Bots({ cfg, setCfg, cardsRaw, onStart, onBack }: BotsProps) {
           )
         })}
       </div>
-      <button className="mvolver" id="volver3" onClick={onBack}>← {T('Volver')}</button>
+      <button className="mvolver" id="volver3" onClick={onBack}>&larr; Back</button>
     </div>
   )
 }

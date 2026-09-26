@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { GameEngine, GameSnapshot } from '../../game/gameEngine'
 import type { CardRow, NamesSubset } from '../../types/cards'
-import { T } from '../../i18n/i18n'
 
 const IMG_BASE = 'https://images.ygoprodeck.com/images/cards/'
 const T_MONSTER = 0x1, T_SPELL = 0x2
@@ -19,7 +18,7 @@ export function LpBar({ side, snapshot }: { side: 'me' | 'opp'; snapshot: GameSn
     prev.current = val
   }, [val])
   const avatar = side === 'me' ? snapshot.config?.myAvatar : snapshot.config?.opponentAvatar
-  const who = side === 'me' ? T('Tú') : (snapshot.config?.opponentName ?? T('Oponente'))
+  const who = side === 'me' ? 'You' : (snapshot.config?.opponentName ?? 'Opponent')
   return (
     <div id={side === 'me' ? 'lpMe' : 'lpOpp'} className={`lp${hurt ? ' hurt' : ''}`}>
       {avatar?.src && <img className="avat" src={avatar.src} alt="" />}
@@ -40,9 +39,9 @@ export function PhasesStrip({ snapshot }: { snapshot: GameSnapshot }) {
   return (
     <div id="phases">
       {PHASES.map(([k, n]) => (
-        <div key={k} className={`ph${k === id ? ' on' : ''}${hasSub && k === id ? ' conSub' : ''}${hasSub && k === id && snapshot.timing === 'damage' ? ' enDamage' : ''}`}
-          data-p={k} data-sub={hasSub && k === id ? T(snapshot.timing === 'damage' ? 'Damage Step' : 'Declaración de ataque') : undefined}>
-          {T(n)}
+        <div key={k} className={`ph${k === id ? ' on' : ''}${hasSub && k === id ? ' withSub' : ''}${hasSub && k === id && snapshot.timing === 'damage' ? ' inDamage' : ''}`}
+          data-p={k} data-sub={hasSub && k === id ? (snapshot.timing === 'damage' ? 'Damage Step' : 'Attack declaration') : undefined}>
+          {n}
         </div>
       ))}
     </div>
@@ -53,11 +52,11 @@ export function ToastLayer({ snapshot }: { snapshot: GameSnapshot }) {
   return (
     <>
       <div id="log">
-        {snapshot.toast && <div key={snapshot.toast.key} className="toast">{T(snapshot.toast.text)}</div>}
+        {snapshot.toast && <div key={snapshot.toast.key} className="toast">{snapshot.toast.text}</div>}
       </div>
       <div id="banner" className={snapshot.banner ? 'show' : ''} key={snapshot.banner?.key ?? 0}
         style={{ color: snapshot.banner?.color }}>
-        {snapshot.banner ? T(snapshot.banner.text) : ''}
+        {snapshot.banner ? snapshot.banner.text : ''}
       </div>
     </>
   )
@@ -68,8 +67,8 @@ export function PhaseCardBanner({ snapshot }: { snapshot: GameSnapshot }) {
   const { text, sub, mine } = snapshot.phaseAnnounce
   return (
     <div id="phasecard" className={`show ${mine ? 'mine' : 'foe'}`}>
-      <div className="pcmain">{T(text)}</div>
-      {sub && <div className="pcsub">{T(sub)}</div>}
+      <div className="pcmain">{text}</div>
+      {sub && <div className="pcsub">{sub}</div>}
     </div>
   )
 }
@@ -78,39 +77,39 @@ export function Controls({ engine, snapshot }: { engine: GameEngine; snapshot: G
   const show = !!(snapshot.idle || snapshot.battle)
   if (!show) return <div id="controles" style={{ display: 'none' }} />
   const phaseText = snapshot.battle
-    ? (snapshot.battle.toMainPhase2 ? 'A Main Phase 2' : 'Terminar Battle Phase')
-    : (snapshot.idle?.toBattlePhase ? 'A Battle Phase' : 'Siguiente fase')
+    ? (snapshot.battle.toMainPhase2 ? 'To Main Phase 2' : 'End Battle Phase')
+    : (snapshot.idle?.toBattlePhase ? 'To Battle Phase' : 'Next phase')
   return (
     <div id="controles" style={{ display: 'flex' }}>
       <button id="btnFase" className="cFase" onClick={() => engine.advancePhase()}>
-        <span className="cIco">▶</span><span id="btnFaseTxt">{T(phaseText)}</span>
+        <span className="cIco">▶</span><span id="btnFaseTxt">{phaseText}</span>
       </button>
       <button id="btnFin" className="cFin" onClick={() => engine.endTurn()}>
-        <span className="cIco">■</span>{T('Terminar turno')}
+        <span className="cIco">■</span>End turn
       </button>
     </div>
   )
 }
 
 export function Topbar({ engine, snapshot, onExit }: { engine: GameEngine; snapshot: GameSnapshot; onExit: () => void }) {
-  const turnInfo = `${T('Turno')} ${snapshot.turnCount} — ${snapshot.turnPlayer === snapshot.me ? T('tú') : T('rival')}`
+  const turnInfo = `Turn ${snapshot.turnCount} — ${snapshot.turnPlayer === snapshot.me ? 'you' : 'opponent'}`
   return (
     <div id="topbar">
       <span className="brand">Goat Format</span>
-      <span style={{ color: '#5f7594', fontSize: 11 }}>motor ocgcore · reglas 2005</span>
+      <span style={{ color: '#5f7594', fontSize: 11 }}>ocgcore engine · 2005 rules</span>
       <span className="sep" />
       <span id="turnInfo" style={{ fontSize: 12, letterSpacing: '.1em', textTransform: 'none' }}>{turnInfo}</span>
-      <button className="btn" id="btnChain" onClick={() => engine.toggleChainMode()}>{T(chainLabel(snapshot))}</button>
-      <button className="btn" id="btnLog" title="Descarga el historial para enviarlo" onClick={() => downloadLog(engine)}>{T('Descargar log')}</button>
-      <button className="btn tiny" id="btnUnstick" title="Solo para depurar" onClick={() => engine.forceUnstick()}>{T('Desatascar')}</button>
-      <button className="btn peligro" id="btnRendirse" title="Termina el duelo como derrota" onClick={() => engine.askSurrenderConfirm()}>{T('Rendirse')}</button>
-      <button className="btn" onClick={onExit}>{T('Salir al menú')}</button>
+      <button className="btn" id="btnChain" onClick={() => engine.toggleChainMode()}>{chainLabel(snapshot)}</button>
+      <button className="btn" id="btnLog" title="Download the match log to report a bug" onClick={() => downloadLog(engine)}>Download log</button>
+      <button className="btn tiny" id="btnUnstick" title="Debug only" onClick={() => engine.forceUnstick()}>Force advance</button>
+      <button className="btn danger" id="btnSurrender" title="Ends the duel as a loss" onClick={() => engine.askSurrenderConfirm()}>Surrender</button>
+      <button className="btn" onClick={onExit}>Back to menu</button>
     </div>
   )
 }
 
 function chainLabel(s: GameSnapshot): string {
-  return { auto: 'Cadenas: automáticas', always: 'Cadenas: preguntar siempre', nunca: 'Cadenas: no activar nada' }[s.chainMode]
+  return { auto: 'Chains: automatic', always: 'Chains: always ask', never: 'Chains: never activate' }[s.chainMode]
 }
 
 function downloadLog(engine: GameEngine) {
@@ -127,8 +126,8 @@ export function DetailPanel({ code, db, names, useImages }: { code: number | nul
   if (code == null) {
     return (
       <aside id="side"><div id="detail"><div className="empty">
-        {T('Pasa el ratón por una carta para ver su texto completo aquí.')}<br /><br />
-        {T('En Main Phase, arrastra una carta de tu mano al tablero para jugarla.')}
+        Hover a card to read its full text here.<br /><br />
+        In Main Phase, drag a card from your hand onto the field to play it.
       </div></div></aside>
     )
   }
@@ -141,7 +140,7 @@ export function DetailPanel({ code, db, names, useImages }: { code: number | nul
       <div id="detail">
         {useImages && <img className="dimg" src={`${IMG_BASE}${d?.alias || code}.jpg`} onError={(e) => { e.currentTarget.style.display = 'none' }} alt="" />}
         <h3>{name}</h3>
-        <div className="dmeta">{mon ? T('Nivel ' + d?.level) : T(d && d.type & T_SPELL ? 'Carta Mágica' : 'Carta de Trampa')}</div>
+        <div className="dmeta">{mon ? `Level ${d?.level}` : (d && d.type & T_SPELL ? 'Spell Card' : 'Trap Card')}</div>
         {mon && <div className="dstats"><span>ATK {d?.attack}</span><span>DEF {d?.defense}</span></div>}
         <div className="dtext">{desc}</div>
       </div>
@@ -153,7 +152,7 @@ export function CardHistory({ snapshot, db, useImages, onHover }: { snapshot: Ga
   return (
     <div id="historial">
       {snapshot.history.map((h) => (
-        <div key={h.id} className={`hcarta ${h.mine ? 'mia' : 'suya'}`} data-kind={h.kind}
+        <div key={h.id} className={`hcarta ${h.mine ? 'mine' : 'theirs'}`} data-kind={h.kind}
           onMouseEnter={() => onHover(h.code)} onClick={() => onHover(h.code)}>
           {useImages
             ? <img src={`${IMG_BASE}${db.get(h.code)?.alias || h.code}.jpg`} loading="lazy" alt="" />

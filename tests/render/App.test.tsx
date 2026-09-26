@@ -8,8 +8,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import App from '../../src/App'
 
-// labels are translated to English by default (idioma() starts at 'en'
-// — see src/i18n/i18n.ts), so navigation happens by id, not by text.
+// The UI is English-only, so navigation happens by id, not by text.
 describe('App', () => {
   it('del menú a un duelo real jugable', async () => {
     render(<App />)
