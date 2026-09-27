@@ -43,7 +43,7 @@ function driveOneStep(engine: GameEngine): void {
 describe('GameEngine', () => {
   afterEach(() => { vi.useRealTimers() })
 
-  it('un duelo completo, guiado por la API pública, llega a finished', async () => {
+  it('a full duel driven through the public API reaches finished', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     const engine = new GameEngine()
     const bootPromise = engine.boot({
@@ -61,7 +61,7 @@ describe('GameEngine', () => {
     await bootPromise
   }, 60_000)
 
-  it('una decisión del lado humano pausa loop() hasta que se responde', async () => {
+  it('a human-side decision pauses loop() until it is answered', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     const engine = new GameEngine()
     const bootPromise = engine.boot({ X, scriptReader, cardsRaw, names, deck: [...deck], extra: [...extra], config: { chainMode: 'never' } })

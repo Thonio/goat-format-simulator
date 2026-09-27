@@ -48,7 +48,7 @@ export function code(name: string): number {
   const c = BY_NAME.get(name) ?? BY_NAME.get(base(name))
   if (!c) throw new Error(`no existe la carta "${name}" en la base`)
   if (!POOL.has(c)) throw new Error(
-    `"${name}" (${c}) no está en el pool de Goat: no lleva script y no haría nada`)
+    `"${name}" (${c}) is not in the Goat pool: it has no script and would do nothing`)
   return c
 }
 export const nameOf = (cardCode: number) => NAMES[cardCode]?.name ?? '#' + cardCode
@@ -90,7 +90,7 @@ export async function setUp(side0: Side = {}, side1: Side = {}, options: Options
     scriptReader,
     errorHandler: (_t, txt) => { if (options.showErrors) console.log('[core]', String(txt)) },
   })
-  if (!handle) throw new Error('createDuel devolvió null')
+  if (!handle) throw new Error('createDuel returned null')
   for (const s of ['constant.lua', 'utility.lua']) await lib.loadScript(handle, s, scriptReader(s))
 
   const place = async (team: number, cardName: string, location: number, sequence: number, position: number) =>

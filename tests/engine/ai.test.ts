@@ -25,8 +25,8 @@ const names: NamesSubset = JSON.parse(readFileSync(here('../../src/vendor/names.
 const { deck, extra } = JSON.parse(readFileSync(here('../../src/vendor/deck.json'), 'utf-8')) as { deck: number[]; extra: number[] }
 const cardDb = buildCardDb(raw)
 
-describe('la IA está viva', () => {
-  it('createBrain juega una partida completa (ambos lados) sin lanzar y avanza turnos', async () => {
+describe('the AI is alive', () => {
+  it('createBrain plays a full game (both sides) without throwing and advances turns', async () => {
     const lib = await X.default({ sync: true })
     const duel = new GoatDuel({ lib, X, cardDb, scriptReader, onEvent: () => {} })
     await duel.create({ deck0: [...deck], deck1: [...deck], extra0: extra, extra1: extra, seed: [42n, 7n, 13n, 29n] })
@@ -51,8 +51,8 @@ describe('la IA está viva', () => {
   }, 60_000)
 })
 
-describe('la IA no se encadena a su propia carta', () => {
-  it('cadena() rechaza responder cuando el eslabón de arriba es del propio bot', () => {
+describe('the AI does not chain to its own card', () => {
+  it('chain() refuses to answer when the link above belongs to the bot itself', () => {
     const T = X.OcgMessageType
     const emptySide = () => ({
       [LOC.DECK]: [], [LOC.HAND]: [], [LOC.GRAVE]: [], [LOC.REMOVED]: [],

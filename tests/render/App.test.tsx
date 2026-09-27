@@ -10,7 +10,7 @@ import App from '../../src/App'
 
 // The UI is English-only, so navigation happens by id, not by text.
 describe('App', () => {
-  it('del menú a un duelo real jugable', async () => {
+  it('goes from the menu to a real playable duel', async () => {
     render(<App />)
 
     expect(screen.getByText('GOAT FORMAT')).toBeTruthy()

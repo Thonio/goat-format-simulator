@@ -38,7 +38,7 @@ function driveOneStep(engine: GameEngine): void {
 describe('DuelScreen', () => {
   afterEach(() => { vi.useRealTimers() })
 
-  it('renderiza un duelo real varios ticks sin lanzar', async () => {
+  it('renders a real duel for several ticks without throwing', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     const engine = new GameEngine()
     const bootPromise = engine.boot({

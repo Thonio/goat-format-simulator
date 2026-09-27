@@ -31,8 +31,8 @@ const flip = (m: OcgMessage, name: string) => { const i = idx(m.pos_changes as n
 const attackWith = (m: OcgMessage, name: string) => { const i = idx(m.attacks as never, name); return i < 0 ? null : { type: R.SELECT_BATTLECMD, action: BA.SELECT_BATTLE, index: i } }
 const choose = (_m: OcgMessage, i = 0) => ({ type: R.SELECT_CARD, indicies: [i] })
 
-describe('cartas, una a una', () => {
-  it('Magician of Faith deja elegir qué mágica recupera, y acaba en tu mano', async () => {
+describe('cards, one at a time', () => {
+  it('Magician of Faith lets you pick which Spell it recovers, and it lands in your hand', async () => {
     const e = await setUp(
       { monsters: [{ card: 'Magician of Faith', pos: P.FACEDOWN_DEFENSE }], gy: ['Pot of Greed', 'Graceful Charity'] },
       {})
@@ -59,7 +59,7 @@ describe('cartas, una a una', () => {
     expect(has(e.hand(0), 'Pot of Greed')).toBe(true)
   })
 
-  it('Thousand-Eyes Restrict absorbe un monstruo tapado, y así se queda en 0 ATK', async () => {
+  it('Thousand-Eyes Restrict absorbs a face-down monster, leaving it at 0 ATK', async () => {
     const e = await setUp(
       { monsters: [{ card: 'Thousand-Eyes Restrict', pos: P.FACEUP_ATTACK }] },
       { monsters: [{ card: 'Mystical Elf', pos: P.FACEDOWN_DEFENSE }, { card: 'Airknight Parshath', pos: P.FACEUP_ATTACK }] })
@@ -85,7 +85,7 @@ describe('cartas, una a una', () => {
     expect(ter?.atk).toBe(0)
   })
 
-  it('Trap Dustshoot ofrece los monstruos de la mano rival, y el elegido sale de la mano', async () => {
+  it('Trap Dustshoot offers the opponent\u2019s monsters from hand, and the chosen one leaves the hand', async () => {
     const e = await setUp(
       { spellTrap: [{ card: 'Trap Dustshoot', pos: P.FACEDOWN_DEFENSE }] },
       { hand: ['Airknight Parshath', 'Sangan', 'Pot of Greed', 'Book of Moon'] })
@@ -111,7 +111,7 @@ describe('cartas, una a una', () => {
     expect(has(e.hand(1), baseName(seen![0].name))).toBe(false)
   })
 
-  it('Sangan destruido en combate busca en el Deck, y acaba en el cementerio', async () => {
+  it('Sangan destroyed in battle searches the Deck and ends up in the graveyard', async () => {
     const e = await setUp(
       { monsters: [{ card: 'Sangan', pos: P.FACEUP_ATTACK }] },
       { monsters: [{ card: 'Airknight Parshath', pos: P.FACEUP_ATTACK }], deck: ['Mystical Elf'] })
@@ -134,7 +134,7 @@ describe('cartas, una a una', () => {
     expect(has(e.gy(0), 'Sangan')).toBe(true)
   })
 
-  it('Sinister Serpent se ofrece en tu Standby Phase, y vuelve a la mano', async () => {
+  it('Sinister Serpent offers itself during your Standby Phase and returns to hand', async () => {
     const e = await setUp({ gy: ['Sinister Serpent'] }, {})
     let offeredOnTurn: { turn: number; player: number; phase: number } | null = null
     await e.run((m) => {
@@ -155,7 +155,7 @@ describe('cartas, una a una', () => {
     expect(has(e.hand(0), 'Sinister Serpent')).toBe(true)
   })
 
-  it('Scapegoat deja cuatro fichas y bloquea tu invocación normal ese turno', async () => {
+  it('Scapegoat leaves four tokens and blocks your normal summon that turn', async () => {
     const e = await setUp({ hand: ['Scapegoat', 'Airknight Parshath'] }, {})
     let activated = false, couldSummonAfter: boolean | null = null
     await e.run((m) => {
@@ -173,7 +173,7 @@ describe('cartas, una a una', () => {
     expect(couldSummonAfter).toBe(false)
   })
 
-  it('Snatch Steal pasa el monstruo a tu lado, y el rival cobra 1000 LP en su Standby', async () => {
+  it('Snatch Steal moves the monster to your side, and the opponent gains 1000 LP on their Standby', async () => {
     const e = await setUp({ hand: ['Snatch Steal'] }, { monsters: [{ card: 'Airknight Parshath', pos: P.FACEUP_ATTACK }] })
     let stolen = false, lpAfterStandby: number | null = null
     await e.run((m) => {
@@ -190,7 +190,7 @@ describe('cartas, una a una', () => {
     expect(lpAfterStandby).toBe(9000)
   })
 
-  it('Book of Moon deja el objetivo boca abajo en defensa', async () => {
+  it('Book of Moon leaves the target face-down in defense', async () => {
     const e = await setUp({ hand: ['Book of Moon'] }, { monsters: [{ card: 'Airknight Parshath', pos: P.FACEUP_ATTACK }] })
     let used = false
     await e.run((m) => {
@@ -208,7 +208,7 @@ describe('cartas, una a una', () => {
     expect((target!.pos & 0x08) !== 0).toBe(true)
   })
 
-  it('con las cinco piezas de Exodia en la mano se gana', async () => {
+  it('you win with the five Exodia pieces in hand', async () => {
     const pieces = ['Exodia the Forbidden One', 'Right Arm of the Forbidden One',
       'Left Arm of the Forbidden One', 'Right Leg of the Forbidden One', 'Left Leg of the Forbidden One']
     const e = await setUp({ hand: pieces }, {})
@@ -217,7 +217,7 @@ describe('cartas, una a una', () => {
     expect(e.winner).toBe(0)
   })
 
-  it('D.D. Warrior Lady se destierra a sí misma y al rival tras el combate', async () => {
+  it('D.D. Warrior Lady banishes itself and the opponent after combat', async () => {
     const e = await setUp(
       { monsters: [{ card: 'D.D. Warrior Lady', pos: P.FACEUP_ATTACK }] },
       { monsters: [{ card: 'Mystical Elf', pos: P.FACEUP_ATTACK }] })

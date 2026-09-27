@@ -22,8 +22,8 @@ const nm = (c: number) => names[c]?.name ?? '#' + c
 const T = X.OcgMessageType
 const LISTS = ['summons', 'special_summons', 'monster_sets', 'spell_sets', 'activates', 'pos_changes', 'attacks'] as const
 
-describe('sincronía motor ↔ interfaz (GoatDuel mirror vs ocgcore)', () => {
-  it('el espejo local coincide con el core en 6 partidas jugadas por el piloto automático', async () => {
+describe('engine ↔ UI sync (GoatDuel mirror vs ocgcore)', () => {
+  it('the local mirror matches the core across 6 autoplay-driven games', async () => {
     const failures: string[] = []
     let checks = 0, games = 0, totalTurns = 0
 
